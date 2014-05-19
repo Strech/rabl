@@ -3,6 +3,7 @@ Rails32::Application.routes.draw do
   resources :posts do
     member do
       get 'renderer'
+      get 'filter'
     end
   end
   # The priority is based upon order of creation:

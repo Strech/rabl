@@ -154,39 +154,59 @@ module Rabl
       @_cache = [key, options]
     end
 
-    # Indicates an attribute or method should be included in the json output
-    # attribute :foo, :as => "bar"
-    # attribute :foo => :bar, :bar => :baz
-    # attribute :foo => :bar, :bar => :baz, :if => lambda { |r| r.foo }
-    def attribute(*args)
-      if args.first.is_a?(Hash) # :foo => :bar, :bar => :baz
-        attr_aliases, conds = args.first.except(:if, :unless), args.first.slice(:if, :unless)
-        attr_aliases.each_pair { |k,v| self.attribute(k, conds.merge(:as => v)) }
-      else # array of attributes i.e :foo, :bar, :baz
-        attr_options = args.extract_options!
-        args.each { |name| @_options[:attributes][name] = attr_options }
+    def filter_mode(mode)
+      case mode
+      when Filter::CUSTOM
+        @_options[:filter_mode] = Filter::CUSTOM
+      when Filter::ALL
+        @_options[:filter_mode] = Filter::ALL
+      else
+        @_options[:filter_mode] = Filter::DEFAULT
       end
     end
-    alias_method :attributes, :attribute
 
-    # Creates an arbitrary node that is included in the json output.
-    # node(:foo) { "bar" }
-    # node(:foo, :if => lambda { ... }) { "bar" }
-    def node(name = nil, options={}, &block)
-      @_options[:node].push({ :name => name, :options => options, :block => block })
+    # TODO: reject if it's extended template
+    def filter(*names)
+      names.extract_options! # TODO: warn
+      @_options[:filters].merge!(Hash[names.flatten.map { |name| [name.to_s, {}] }])
     end
-    alias_method :code, :node
+    alias_method :filters, :filter
 
-    # Creates a child node that is included in json output
-    # child(@user) { attribute :full_name }
-    def child(data, options={}, &block)
-      @_options[:child].push({ :data => data, :options => options, :block => block })
-    end
+    ['', 'allowed_'].each do |prefix|
+      # Indicates an attribute or method should be included in the json output
+      # attribute :foo, :as => "bar"
+      # attribute :foo => :bar, :bar => :baz
+      # attribute :foo => :bar, :bar => :baz, :if => lambda { |r| r.foo }
+      define_method "#{prefix}attribute" do |*args|
+        if args.first.is_a?(Hash) # :foo => :bar, :bar => :baz
+          attr_aliases, conds = args.first.except(:if, :unless), args.first.slice(:if, :unless)
+          attr_aliases.each_pair { |k,v| self.send "#{prefix}attribute", k, conds.merge(:as => v) }
+        else # array of attributes i.e :foo, :bar, :baz
+          attr_options = args.extract_options!
+          args.each { |name| @_options[:"#{prefix}attributes"][name] = attr_options }
+        end
+      end
+      alias_method :"#{prefix}attributes", :"#{prefix}attribute"
 
-    # Glues data from a child node to the json_output
-    # glue(@user) { attribute :full_name => :user_full_name }
-    def glue(data, options={}, &block)
-      @_options[:glue].push({ :data => data, :options => options, :block => block })
+      # Creates an arbitrary node that is included in the json output.
+      # node(:foo) { "bar" }
+      # node(:foo, :if => lambda { ... }) { "bar" }
+      define_method "#{prefix}node" do |name = nil, options={}, &block|
+        @_options[:"#{prefix}node"].push({ :name => name, :options => options, :block => block })
+      end
+      alias_method :"#{prefix}code", :"#{prefix}node"
+
+      # Creates a child node that is included in json output
+      # child(@user) { attribute :full_name }
+      define_method "#{prefix}child" do |data, options={}, &block|
+        @_options[:"#{prefix}child"].push({ :data => data, :options => options, :block => block })
+      end
+
+      # Glues data from a child node to the json_output
+      # glue(@user) { attribute :full_name => :user_full_name }
+      define_method "#{prefix}glue" do |data, options={}, &block|
+        @_options[:"#{prefix}glue"].push({ :data => data, :options => options, :block => block })
+      end
     end
 
     # Extends an existing rabl template with additional attributes in the block
@@ -262,14 +282,18 @@ module Rabl
 
     # Resets the options parsed from a rabl template.
     def reset_options!(scope)
-      @_options[:attributes] = {}
-      @_options[:node] = []
-      @_options[:child] = []
-      @_options[:glue] = []
+      ["", "allowed_"].each do |prefix|
+        @_options[:"#{prefix}attributes"] = {}
+        @_options[:"#{prefix}node"] = []
+        @_options[:"#{prefix}child"] = []
+        @_options[:"#{prefix}glue"] = []
+      end
       @_options[:extends] = []
       @_options[:root_name]  = nil
-      @_options[:scope] = scope
       @_options[:format] ||= self.request_format
+      @_options[:filters] ||= {}
+      @_options[:filter_mode] ||= Filter::DEFAULT
+      @_options[:scope] = scope
     end
 
     # Caches the results of the block based on object cache_key

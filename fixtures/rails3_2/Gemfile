@@ -37,4 +37,8 @@ gem 'jquery-rails'
 
 # To use debugger
 # gem 'debugger'
+if RUBY_VERSION > '2.0.0' && !ENV['TRAVIS']
+  gem 'pry-byebug'
+  gem 'pry-stack_explorer'
+end
 

@@ -86,12 +86,20 @@ module Rabl
       @options[type].each do |settings|
         send(type, settings[settings_type], settings[:options], &settings[:block])
       end if @options.has_key?(type)
+
+      @options[:"allowed_#{type}"].each do |settings|
+        send(type, settings[settings_type], settings[:options], &settings[:block])
+      end if @options.has_key?(:"allowed_#{type}") && @options[:filter_mode] != Filter::DEFAULT
     end
 
     def update_attributes
       @options[:attributes].each_pair do |attribute, settings|
         attribute(attribute, settings)
       end if @options.has_key?(:attributes)
+
+      @options[:allowed_attributes].each_pair do |attribute, settings|
+        attribute(attribute, settings)
+      end if @options.has_key?(:allowed_attributes) && @options[:filter_mode] != Filter::DEFAULT
     end
 
     # Indicates an attribute or method should be included in the json output
@@ -101,7 +109,7 @@ module Rabl
       if @_object && attribute_present?(name) && resolve_condition(options)
         attribute = data_object_attribute(name)
         name = (options[:as] || name).to_sym
-        @_result[name] = attribute
+        @_result[name] = attribute if attribute_selected?(name)
       end
     end
     alias_method :attributes, :attribute
@@ -111,6 +119,7 @@ module Rabl
     # node(:foo, :if => lambda { |m| m.foo.present? }) { "bar" }
     def node(name, options={}, &block)
       return unless resolve_condition(options)
+      return false unless attribute_selected?(name)
       result = block.call(@_object)
       if name.present?
         @_result[name.to_sym] = result
@@ -127,11 +136,19 @@ module Rabl
     def child(data, options={}, &block)
       return false unless data.present? && resolve_condition(options)
       name   = is_name_value?(options[:root]) ? options[:root] : data_name(data)
+      return false unless attribute_selected?(data)
       object = data_object(data)
       include_root = is_collection?(object) && options.fetch(:object_root, @options[:child_root]) # child @users
       engine_options = @options.slice(:child_root).merge(:root => include_root)
       engine_options.merge!(:object_root_name => options[:object_root]) if is_name_value?(options[:object_root])
       object = { object => name } if data.respond_to?(:each_pair) && object # child :users => :people
+
+      filters = @options[:filters][name.to_s]
+      engine_options.merge!(:filters => @options[:filters][name.to_s]) if filters
+
+      filter_mode = filters && filters.detect { |f| f == Filter::ALL || f == Filter::DEFAULT }
+      engine_options.merge!(:filter_mode => filter_mode || @options[:filter_mode] || Filter::DEFAULT)
+
       @_result[name.to_sym] = self.object_to_hash(object, engine_options, &block)
     end
 
@@ -139,6 +156,7 @@ module Rabl
     # glue(@user) { attribute :full_name => :user_full_name }
     def glue(data, options={}, &block)
       return false unless data.present? && resolve_condition(options)
+      return false unless attribute_selected?(data)
       object = data_object(data)
       glued_attributes = self.object_to_hash(object, :root => false, &block)
       @_result.merge!(glued_attributes) if glued_attributes
@@ -194,6 +212,14 @@ module Rabl
         raise "Failed to render missing attribute #{name}"
       else
         return false
+      end
+    end
+
+    def attribute_selected?(name)
+      if @options[:filter_mode] == Filter::CUSTOM
+        @options[:filters].include?(name.to_s)
+      else
+        true
       end
     end
 
