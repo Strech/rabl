@@ -14,7 +14,7 @@ module Rabl
     #   :attributes, :node, :child, :glue, :extends }
     #
     def initialize(options={}, &block)
-      @options    = options
+      @options    = options.reverse_merge(filter_mode: Filter::DEFAULT)
       @_scope     = options[:scope]
       @_view_path = options[:view_path]
     end
@@ -143,11 +143,11 @@ module Rabl
       engine_options.merge!(:object_root_name => options[:object_root]) if is_name_value?(options[:object_root])
       object = { object => name } if data.respond_to?(:each_pair) && object # child :users => :people
 
-      filters = @options[:filters][name.to_s]
+      filters = @options[:filters][name.to_s] if @options.has_key?(:filters)
       engine_options.merge!(:filters => @options[:filters][name.to_s]) if filters
 
-      filter_mode = filters && filters.detect { |f| f == Filter::ALL || f == Filter::DEFAULT }
-      engine_options.merge!(:filter_mode => filter_mode || @options[:filter_mode] || Filter::DEFAULT)
+      filter_mode = filters && filters.detect { |f| f == Filter::ALL || f == Filter::DEFAULT } || @options[:filter_mode]
+      engine_options.merge!(:filter_mode => filter_mode) if filter_mode && filter_mode != Filter::DEFAULT
 
       @_result[name.to_sym] = self.object_to_hash(object, engine_options, &block)
     end
