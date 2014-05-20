@@ -14,9 +14,19 @@ module Rabl
     #   :attributes, :node, :child, :glue, :extends }
     #
     def initialize(options={}, &block)
-      @options    = options.reverse_merge(filter_mode: Filter::DEFAULT)
+      @options    = options.reverse_merge(
+        filter_mode: default_filter_mode(options)
+      )
       @_scope     = options[:scope]
       @_view_path = options[:view_path]
+    end
+
+    def default_filter_mode(options={})
+      if (options[:filters] || {}).empty?
+        Filter::DEFAULT
+      else
+        Filter::CUSTOM
+      end
     end
 
     # Given an object and options, returns the hash representation
@@ -83,23 +93,23 @@ module Rabl
 
     def update_settings(type)
       settings_type = SETTING_TYPES[type]
-      @options[type].each do |settings|
-        send(type, settings[settings_type], settings[:options], &settings[:block])
-      end if @options.has_key?(type)
-
       @options[:"allowed_#{type}"].each do |settings|
         send(type, settings[settings_type], settings[:options], &settings[:block])
       end if @options.has_key?(:"allowed_#{type}") && @options[:filter_mode] != Filter::DEFAULT
+
+      @options[type].each do |settings|
+        send(type, settings[settings_type], settings[:options], &settings[:block])
+      end if @options.has_key?(type)
     end
 
     def update_attributes
-      @options[:attributes].each_pair do |attribute, settings|
-        attribute(attribute, settings)
-      end if @options.has_key?(:attributes)
-
       @options[:allowed_attributes].each_pair do |attribute, settings|
         attribute(attribute, settings)
       end if @options.has_key?(:allowed_attributes) && @options[:filter_mode] != Filter::DEFAULT
+
+      @options[:attributes].each_pair do |attribute, settings|
+        attribute(attribute, settings)
+      end if @options.has_key?(:attributes)
     end
 
     # Indicates an attribute or method should be included in the json output
@@ -107,9 +117,11 @@ module Rabl
     # attribute :foo, :as => "bar", :if => lambda { |m| m.foo }
     def attribute(name, options={})
       if @_object && attribute_present?(name) && resolve_condition(options)
-        attribute = data_object_attribute(name)
-        name = (options[:as] || name).to_sym
-        @_result[name] = attribute if attribute_selected?(name)
+        result_name = (options[:as] || name).to_sym
+        if attribute_selected?(result_name) && !@_result.has_key?(result_name)
+          attribute = data_object_attribute(name)
+          @_result[result_name] = attribute
+        end
       end
     end
     alias_method :attributes, :attribute
@@ -136,20 +148,41 @@ module Rabl
     def child(data, options={}, &block)
       return false unless data.present? && resolve_condition(options)
       name   = is_name_value?(options[:root]) ? options[:root] : data_name(data)
-      return false unless attribute_selected?(data)
+      return false unless attribute_selected?(name)
+      result_name = name.to_sym
+      return false if @_result.has_key?(result_name)
+
       object = data_object(data)
       include_root = is_collection?(object) && options.fetch(:object_root, @options[:child_root]) # child @users
       engine_options = @options.slice(:child_root).merge(:root => include_root)
       engine_options.merge!(:object_root_name => options[:object_root]) if is_name_value?(options[:object_root])
       object = { object => name } if data.respond_to?(:each_pair) && object # child :users => :people
 
-      filters = @options[:filters][name.to_s] if @options.has_key?(:filters)
-      engine_options.merge!(:filters => @options[:filters][name.to_s]) if filters
+      filters = inherited_filters(result_name)
+      engine_options.merge!(:filters => filters) if filters
 
-      filter_mode = filters && filters.detect { |f| f == Filter::ALL || f == Filter::DEFAULT } || @options[:filter_mode]
-      engine_options.merge!(:filter_mode => filter_mode) if filter_mode && filter_mode != Filter::DEFAULT
+      filter_mode = inherited_filter_mode(result_name)
+      engine_options.merge!(:filter_mode => filter_mode) if filter_mode
 
-      @_result[name.to_sym] = self.object_to_hash(object, engine_options, &block)
+      @_result[result_name] = self.object_to_hash(object, engine_options, &block)
+    end
+
+    def inherited_filters(result_name)
+      return unless @options.has_key?(:filters)
+      inherited_filters = @options[:filters][result_name.to_s] || {}
+      return if inherited_filters.empty?
+      inherited_filters
+    end
+
+    # inherit only all || custom if inherited_filters present
+    def inherited_filter_mode(result_name)
+      inherited_filter_mode = @options[:filter_mode]
+      if (inherited_filter_mode == Filter::ALL) ||
+        (inherited_filter_mode == Filter::CUSTOM && inherited_filters(result_name))
+        inherited_filter_mode
+      else
+        nil
+      end
     end
 
     # Glues data from a child node to the json_output

@@ -131,6 +131,46 @@ context "Rabl::Builder" do
     end
   end
 
+  context "#allowed_attribute" do
+    helper(:default_attributes) { { :allowed_attributes => { :name => {}, :city => { :as => :city } } } }
+
+    context "when not filtered" do
+      setup { builder(default_attributes) }
+
+      asserts "shows nothing" do
+        topic.build(@user)
+      end.equivalent_to({})
+    end
+
+    context "symbolized keys" do
+      setup { builder(default_attributes.merge(:filters => { 'name' => {} })) }
+
+      asserts "restrict nodes in custom mode" do
+        topic.build(@user)
+      end.equivalent_to({:name => 'rabl'})
+    end
+
+    context "ignores non-existent filtered attribute" do
+      setup { stub(Rabl.configuration).raise_on_missing_attribute { false } }
+
+      context "when not allowed" do
+        setup { builder(default_attributes.merge(:filters => { 'is_admin' => {} })) }
+
+        asserts "silently pass" do
+          topic.build(@user)
+        end.equals({})
+      end
+
+      context "when not exist" do
+        setup { builder(default_attributes.merge(:filters => { 'password' => {} })) }
+
+        asserts "silently pass" do
+          topic.build(@user)
+        end.equals({})
+      end
+    end
+  end
+
   context "#node" do
     asserts "that it has node :foo" do
       build_hash @user, :node => [{ :name => :foo, :options => {}, :block => lambda { |u| "bar" } }]
@@ -210,6 +250,58 @@ context "Rabl::Builder" do
       ])
       b.build(@user)
     end.equivalent_to({ :user => { :name => "rabl" } })
+  end
+
+  context "#allowed_child" do
+    asserts "that it not disturbs simple child" do
+      b = builder(
+        :child => [ {
+          :data => { @user => :user },
+          :options => { },
+          :block => lambda { |u| attribute :name }
+        } ],
+        :allowed_child => [ {
+          :data => { @user => :user },
+          :options => { },
+          :block => lambda { |u| attribute :email }
+        } ]
+      )
+      b.build(@user)
+    end.equivalent_to({ :user => { :name => "rabl" } })
+
+    asserts "that it prefers allowed_child over simple child && filters it" do
+      b = builder(
+        :child => [ {
+          :data => { @user => :user },
+          :options => { },
+          :block => lambda { |u| attribute :name }
+        } ],
+        :allowed_child => [ {
+          :data => { @user => :user },
+          :options => { },
+          :block => lambda { |u| attribute :age, :city }
+        } ],
+        :filters => { 'user' => { 'age' => {} } }
+      )
+      b.build(@user)
+    end.equivalent_to({ :user => { :age => 24 } })
+
+    asserts "that it prefers uses all attributes from allowed_child when filter empty" do
+      b = builder(
+        :child => [ {
+          :data => { @user => :user },
+          :options => { },
+          :block => lambda { |u| attribute :name }
+        } ],
+        :allowed_child => [ {
+          :data => { @user => :user },
+          :options => { },
+          :block => lambda { |u| attribute :age, :city }
+        } ],
+        :filters => { 'user' => {} }
+      )
+      b.build(@user)
+    end.equivalent_to({ :user => { :age => 24, :city => 'irvine' } })
   end
 
   context "#glue" do

@@ -20,6 +20,7 @@ module Rabl
     # Renders the representation based on source, object, scope and locals
     # Rabl::Engine.new("...source...", { :format => "xml" }).render(scope, { :foo => "bar", :object => @user })
     def render(scope, locals, &block)
+
       reset_options!(scope)
       set_instance_variables!(scope, locals, &block)
       instance_exec(root_object, &block) if block_given?
