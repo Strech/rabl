@@ -1,7 +1,9 @@
 object @user => :person
 
 attributes :username, :email, :location
-attributes :created_at => :registered_at
+node :registered_at do |user|
+  user.created_at.to_s
+end
 
 node :role do |user|
   user.is_admin ? 'admin' : 'normal'

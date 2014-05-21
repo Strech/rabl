@@ -18,10 +18,8 @@ module Rabl
     def initialize(options={}, &block)
       @options    = options
 
-      filters = (options[:filters] || {}).except!(Filter::CUSTOM.to_s, Filter::DEFAULT.to_s)
+      filters = (options[:filters] || {}).except!(Filter::CUSTOM.to_s)
       filter_mode = default_filter_mode(filters)
-      # some assert
-      filters.keys.each { |k| attribute_present?(k) } if filter_mode == Filter::CUSTOM
 
       @options[:filter_mode] = filter_mode
       @options[:filters] = filters
@@ -31,7 +29,8 @@ module Rabl
     end
 
     def default_filter_mode(filters={})
-      if filters.empty?
+      if filters.empty? || filters.has_key?(Filter::DEFAULT.to_s)
+        filters.except!(Filter::DEFAULT.to_s)
         Filter::DEFAULT
       elsif filters.has_key?(Filter::ALL.to_s)
         filters.except!(Filter::ALL.to_s)
@@ -70,6 +69,14 @@ module Rabl
       replace_empty_string_values if Rabl.configuration.replace_empty_string_values_with_nil_values
       remove_nil_values           if Rabl.configuration.exclude_nil_values
 
+      # some assert
+      if Rabl.configuration.raise_on_missing_attribute
+        requested_keys = @options[:filters].keys - [Filter::DEFAULT, Filter::ALL]
+        if (missing = requested_keys - @_result.keys.map(&:to_s)).present?
+          raise MissingAttribute.new("Failed to render missing attribute #{missing.join(',')}")
+        end
+      end
+
       # Return Results
       @_root_name ? { @_root_name => @_result } : @_result
     end
@@ -105,9 +112,11 @@ module Rabl
 
     def update_settings(type)
       settings_type = SETTING_TYPES[type]
-      @options[:"allowed_#{type}"].each do |settings|
-        send(type, settings[settings_type], settings[:options], &settings[:block])
-      end if @options.has_key?(:"allowed_#{type}") && @options[:filter_mode] != Filter::DEFAULT
+      unless @options[:filter_mode] == Filter::DEFAULT && @options[:filters].blank?
+        @options[:"allowed_#{type}"].each do |settings|
+          send(type, settings[settings_type], settings[:options], &settings[:block])
+        end if @options.has_key?(:"allowed_#{type}")
+      end
 
       @options[type].each do |settings|
         send(type, settings[settings_type], settings[:options], &settings[:block])
@@ -115,9 +124,11 @@ module Rabl
     end
 
     def update_attributes
-      @options[:allowed_attributes].each_pair do |attribute, settings|
-        attribute(attribute, settings)
-      end if @options.has_key?(:allowed_attributes) && @options[:filter_mode] != Filter::DEFAULT
+      unless @options[:filter_mode] == Filter::DEFAULT && @options[:filters].blank?
+        @options[:allowed_attributes].each_pair do |attribute, settings|
+          attribute(attribute, settings)
+        end if @options.has_key?(:allowed_attributes)
+      end
 
       @options[:attributes].each_pair do |attribute, settings|
         attribute(attribute, settings)
@@ -179,6 +190,7 @@ module Rabl
     def inherited_filters(result_name)
       return unless @options.has_key?(:filters)
       inherited_filters = @options[:filters][result_name.to_s] || {}
+      return { Filter::ALL.to_s => {} } if @options[:filter_mode] == Filter::ALL
       return if inherited_filters.empty?
       inherited_filters
     end

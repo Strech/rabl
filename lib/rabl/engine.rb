@@ -155,21 +155,9 @@ module Rabl
       @_cache = [key, options]
     end
 
-    def filter_mode(mode)
-      case mode
-      when Filter::CUSTOM
-        @_options[:filter_mode] = Filter::CUSTOM
-      when Filter::ALL
-        @_options[:filter_mode] = Filter::ALL
-      else
-        @_options[:filter_mode] = Filter::DEFAULT
-      end
-    end
-
     # TODO: reject if it's extended template
-    def filter(*names)
-      names.extract_options! # TODO: warn
-      @_options[:filters].merge!(Hash[names.flatten.map { |name| [name.to_s, {}] }])
+    def filter(filters={})
+      @_options[:filters].merge!(filters)
     end
     alias_method :filters, :filter
 

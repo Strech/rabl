@@ -100,6 +100,10 @@ context "PostsController" do
       # Attributes (regular)
       asserts("contains post title") { topic['title'] }.equals { @post1.title }
       asserts("contains post body")  { topic['body'] }.equals { @post1.body }
+
+      teardown do
+        Rabl.configuration.escape_all_output = false
+      end
     end
 
     context "for third post with script tags" do
@@ -112,6 +116,10 @@ context "PostsController" do
       # Attributes (regular)
       asserts("contains post title") { topic['title'] }.equals { @post3.title }
       asserts("contains escaped post body")  { topic['body'] }.equals { ERB::Util.h(@post3.body) }
+
+      teardown do
+        Rabl.configuration.escape_all_output = false
+      end
     end
   end # escaping output
 

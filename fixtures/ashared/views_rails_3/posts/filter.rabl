@@ -1,6 +1,5 @@
 object @post
-filters @filter
-filter_mode @filter_mode
+filters @filters
 
 attributes :title, :body
 allowed_attributes :user_id => :uid

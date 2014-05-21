@@ -15,22 +15,7 @@ class PostsController < ApplicationController
   end
 
   def filter
-    _filter = params[:filter].to_s.split(',')
-    if _filter.include? 'all'
-      @filter = {}
-      @filter_mode = Rabl::Filter::ALL
-    elsif _filter.include? 'default'
-      @filter = _filter - ['default']
-      @filter_mode = Rabl::Filter::DEFAULT
-    else
-      @filter = _filter
-      @filter_mode = Rabl::Filter::CUSTOM
-    end
-    post = Post.find(params[:id])
-    render json: Rabl.render(
-      post, 'posts/filter',
-      view_path: 'app/views', format: :json,
-      scope: view_context
-    )
+    @filters = Hash[params[:filter].to_s.split(',').map { |f| [f, {}] }]
+    @post = Post.find(params[:id])
   end
 end

@@ -63,38 +63,38 @@ context "PostsController" do
       asserts("contains post title") { topic['title'] }.equals { @post1.title }
       asserts("contains post body")  { topic['body'] }.equals { @post1.body }
       asserts("contains post user_id as uid")  { topic['uid'] }.equals { @post1.user_id }
-      asserts("contains post user => [email, username is_admin phones]")  { topic['user'].keys }.equals { %w[email username is_admin phones] }
+      asserts("contains post user => [email, username is_admin phones]")  { topic['user'].keys.sort }.equals { %w[email username is_admin phones].sort }
 
       asserts("contains post user => phone => [formatted, is_primary]")  {
         topic['user']['phones']
       }.equals {
         @user1.phone_numbers.map do |phone|
-          Hash[%w[formatted is_primary name].map do |attr|
+          Hash[%w[name formatted is_primary].map do |attr|
             [attr, phone.send(attr)]
           end]
         end
       }
     end
 
-    context "all" do
+    context "default,..." do
       setup do
-        get "/posts/#{@post1.id}/filter?filter=all"
+        get "/posts/#{@post1.id}/filter?filter=default,uid"
         json_output['post']
       end
       asserts("contains post title") { topic['title'] }.equals { @post1.title }
       asserts("contains post body")  { topic['body'] }.equals { @post1.body }
       asserts("contains post user_id as uid")  { topic['uid'] }.equals { @post1.user_id }
-      asserts("contains post user => [email, username is_admin phones]")  { topic['user'].keys }.equals { %w[email username is_admin phones] }
+      #asserts("contains post user => [email, username is_admin phones]")  { topic['user'].keys }.equals { %w[email username is_admin phones] }
 
-      asserts("contains post user => phone => [formatted, is_primary]")  {
-        topic['user']['phones']
-      }.equals {
-        @user1.phone_numbers.map do |phone|
-          Hash[%w[formatted is_primary name].map do |attr|
-            [attr, phone.send(attr)]
-          end]
-        end
-      }
+      #asserts("contains post user => phone => [formatted, is_primary]")  {
+      #  topic['user']['phones']
+      #}.equals {
+      #  @user1.phone_numbers.map do |phone|
+      #    Hash[%w[formatted is_primary name].map do |attr|
+      #      [attr, phone.send(attr)]
+      #    end]
+      #  end
+      #}
     end
   end # filter action, json
 
