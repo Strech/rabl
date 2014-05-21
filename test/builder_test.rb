@@ -112,7 +112,7 @@ context "Rabl::Builder" do
 
         asserts "the node" do
           build_hash @user, :attributes => { :fake => :fake }
-        end.raises(RuntimeError)
+        end.raises_kind_of(RuntimeError)
       end
     end
 
@@ -167,6 +167,16 @@ context "Rabl::Builder" do
         asserts "silently pass" do
           topic.build(@user)
         end.equals({})
+      end
+    end
+
+    context "when confirured to raise" do
+      setup { stub(Rabl.configuration).raise_on_missing_attribute { true } }
+
+      context "when not exist" do
+        asserts "raises Error" do
+          builder(default_attributes.merge(:filters => { 'password' => {} })).build(@user)
+        end.raises_kind_of(RuntimeError)
       end
     end
   end

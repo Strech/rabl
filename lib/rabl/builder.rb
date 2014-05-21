@@ -1,5 +1,7 @@
 module Rabl
   class Builder
+    class MissingAttribute < RuntimeError; end
+
     include Rabl::Partials
 
     SETTING_TYPES = {
@@ -14,16 +16,26 @@ module Rabl
     #   :attributes, :node, :child, :glue, :extends }
     #
     def initialize(options={}, &block)
+      filters = (options[:filters] || {}).except!(Filter::CUSTOM.to_s, Filter::DEFAULT.to_s)
+      filter_mode = default_filter_mode(filters)
+      # some assert
+      filters.keys.each { |k| attribute_present?(k) } if filter_mode == Filter::CUSTOM
+
       @options    = options.reverse_merge(
-        filter_mode: default_filter_mode(options)
+        filter_mode: filter_mode,
+        filters: filters
       )
+
       @_scope     = options[:scope]
       @_view_path = options[:view_path]
     end
 
-    def default_filter_mode(options={})
-      if (options[:filters] || {}).empty?
+    def default_filter_mode(filters={})
+      if filters.empty?
         Filter::DEFAULT
+      elsif filters.has_key?(Filter::ALL.to_s)
+        filters.except!(Filter::ALL.to_s)
+        Filter::ALL
       else
         Filter::CUSTOM
       end
@@ -242,7 +254,7 @@ module Rabl
       if @_object.respond_to?(name)
         return true
       elsif Rabl.configuration.raise_on_missing_attribute
-        raise "Failed to render missing attribute #{name}"
+        raise MissingAttribute.new("Failed to render missing attribute #{name}")
       else
         return false
       end
