@@ -16,15 +16,15 @@ module Rabl
     #   :attributes, :node, :child, :glue, :extends }
     #
     def initialize(options={}, &block)
+      @options    = options
+
       filters = (options[:filters] || {}).except!(Filter::CUSTOM.to_s, Filter::DEFAULT.to_s)
       filter_mode = default_filter_mode(filters)
       # some assert
       filters.keys.each { |k| attribute_present?(k) } if filter_mode == Filter::CUSTOM
 
-      @options    = options.reverse_merge(
-        filter_mode: filter_mode,
-        filters: filters
-      )
+      @options[:filter_mode] = filter_mode
+      @options[:filters] = filters
 
       @_scope     = options[:scope]
       @_view_path = options[:view_path]
@@ -173,9 +173,6 @@ module Rabl
       filters = inherited_filters(result_name)
       engine_options.merge!(:filters => filters) if filters
 
-      filter_mode = inherited_filter_mode(result_name)
-      engine_options.merge!(:filter_mode => filter_mode) if filter_mode
-
       @_result[result_name] = self.object_to_hash(object, engine_options, &block)
     end
 
@@ -184,17 +181,6 @@ module Rabl
       inherited_filters = @options[:filters][result_name.to_s] || {}
       return if inherited_filters.empty?
       inherited_filters
-    end
-
-    # inherit only all || custom if inherited_filters present
-    def inherited_filter_mode(result_name)
-      inherited_filter_mode = @options[:filter_mode]
-      if (inherited_filter_mode == Filter::ALL) ||
-        (inherited_filter_mode == Filter::CUSTOM && inherited_filters(result_name))
-        inherited_filter_mode
-      else
-        nil
-      end
     end
 
     # Glues data from a child node to the json_output
