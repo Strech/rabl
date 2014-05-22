@@ -38,7 +38,7 @@ context "PostsController" do
     # Attributes (custom name)
     asserts("contains post posted_at") do
       json_output['articles'].map { |o| o["article"]["posted_at"] }
-    end.equals { @posts.map(&:created_at).map{ |t| t.iso8601(3) } }
+    end.equals { @posts.map(&:created_at).map{ |t| t.iso8601 } }
 
     # Child
     asserts("contains post user child username") do
@@ -119,7 +119,7 @@ context "PostsController" do
     asserts("contains post body")  { topic['body'] }.equals { @post1.body }
 
     # Attributes (custom name)
-    asserts("contains post posted_at") { topic['posted_at'] }.equals { @post1.created_at.utc.to_s }
+    asserts("contains post posted_at") { topic['posted_at'] }.equals { @post1.created_at.utc.iso8601 }
 
     # Child
     asserts("contains post user child username") { topic["user"]["username"] }.equals { @post1.user.username }
@@ -207,11 +207,11 @@ context "PostsController" do
         json_output['articles'].map { |o| o['article']['title'] }
       end.equals { @posts.map(&:title) }
 
-      asserts(:body).equals { cache_hit ['kittens!', @posts, nil, 'json', 'e83f65eee5ffb454c418a59105f222c4'] }
+      asserts(:body).equals { cache_hit ['kittens!', @posts, nil, 'json', 'a2b90fac91f5fc3354a7edac371bae91'] }
 
       asserts("contains cache hits per object (posts by title)") do
         json_output['articles'].map { |o| o['article']['title'] }
-      end.equals { @posts.map { |p| cache_hit([p, nil, 'hash', 'e373525f49a3b3b044af05255e84839d'])[:title] } }
+      end.equals { @posts.map { |p| cache_hit([p, nil, 'hash', 'f83cacac1bfa240509c51574d28c7b21'])[:title] } }
     end # index action, caching, json
 
     context "for index action with caching in xml" do
@@ -224,7 +224,7 @@ context "PostsController" do
         doc.elements.inject('articles/article/title', []) {|arr, ele| arr << ele.text}
       end.equals { @posts.map(&:title) }
 
-      asserts(:body).equals { cache_hit ['kittens!', @posts, nil, 'xml', 'e83f65eee5ffb454c418a59105f222c4'] }
+      asserts(:body).equals { cache_hit ['kittens!', @posts, nil, 'xml', 'a2b90fac91f5fc3354a7edac371bae91'] }
     end # index action, caching, xml
 
     context "for show action with caching" do
@@ -234,7 +234,7 @@ context "PostsController" do
 
       asserts("contains post title") { json_output['post']['title'] }.equals { @post1.title }
 
-      asserts(:body).equals { cache_hit [@post1, nil, 'json', 'e373525f49a3b3b044af05255e84839d'] }
+      asserts(:body).equals { cache_hit [@post1, nil, 'json', 'f83cacac1bfa240509c51574d28c7b21'] }
     end # show action, caching, json
 
     context "cache_all_output" do

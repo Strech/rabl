@@ -24,3 +24,18 @@ class Riot::Situation
     Rails.application
   end
 end
+
+unless Rails::VERSION::MAJOR >= 4 && Rails::VERSION::MINOR >= 1 && Rails::VERSION::TINY >= 1
+  class ActiveSupport::TimeWithZone
+    def as_json(options = nil)
+      if ActiveSupport::JSON::Encoding.use_standard_json_time_format
+        # wait for Rails 4.1.1
+        # https://github.com/rails/rails/commit/c0965004486f2ea5a9656ba718a3377c9614f97d
+        xmlschema
+      else
+        %(#{time.strftime("%Y/%m/%d %H:%M:%S")} #{formatted_offset(false)})
+      end
+    end
+  end
+end
+
