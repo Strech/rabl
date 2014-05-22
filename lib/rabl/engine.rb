@@ -174,7 +174,7 @@ module Rabl
           attr_options = args.extract_options!
           args.each do |name|
             attr_options[:as] = camelize(name) if prefix == 'camelized_' && !name.nil?
-            @_options[:"#{options_prefix}attributes"][name] = attr_options
+            @_options[:"#{options_prefix}attributes"][name] = attr_options.dup
           end
         end
       end

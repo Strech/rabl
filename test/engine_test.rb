@@ -216,12 +216,12 @@ context "Rabl::Engine" do
       asserts "that it adds an attribute or method to be included in output using camelCase" do
         template = rabl %{
           object @user
-          camelized_attribute :some_attr
+          camelized_attribute :some_attr, :another_attr
         }
         scope = Object.new
         scope.instance_variable_set :@user, User.new
         JSON.parse(template.render(scope))
-      end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\"}}")
+      end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
     end
 
     context "#code" do
