@@ -161,7 +161,7 @@ module Rabl
     end
     alias_method :filters, :filter
 
-    ['', 'allowed_'].each do |prefix|
+    {'' => '', 'allowed_' => 'allowed_', 'camelized_' => ''}.each do |prefix, options_prefix|
       # Indicates an attribute or method should be included in the json output
       # attribute :foo, :as => "bar"
       # attribute :foo => :bar, :bar => :baz
@@ -172,7 +172,10 @@ module Rabl
           attr_aliases.each_pair { |k,v| self.send "#{prefix}attribute", k, conds.merge(:as => v) }
         else # array of attributes i.e :foo, :bar, :baz
           attr_options = args.extract_options!
-          args.each { |name| @_options[:"#{prefix}attributes"][name] = attr_options }
+          args.each do |name|
+            attr_options[:as] = camelize(name) if prefix == 'camelized_' && !name.nil?
+            @_options[:"#{options_prefix}attributes"][name] = attr_options
+          end
         end
       end
       alias_method :"#{prefix}attributes", :"#{prefix}attribute"
@@ -181,20 +184,39 @@ module Rabl
       # node(:foo) { "bar" }
       # node(:foo, :if => lambda { ... }) { "bar" }
       define_method "#{prefix}node" do |name = nil, options={}, &block|
-        @_options[:"#{prefix}node"].push({ :name => name, :options => options, :block => block })
+        options[:as] = camelize(name) if prefix == 'camelized_' && !name.nil?
+        @_options[:"#{options_prefix}node"].push({ :name => name, :options => options, :block => block })
       end
       alias_method :"#{prefix}code", :"#{prefix}node"
 
       # Creates a child node that is included in json output
+      # child(:user) { attribute :full_name }
       # child(@user) { attribute :full_name }
+      # child(@user => :user) { attribute :full_name }
       define_method "#{prefix}child" do |data, options={}, &block|
-        @_options[:"#{prefix}child"].push({ :data => data, :options => options, :block => block })
+        if prefix == 'camelized_'
+          if data.is_a? Symbol
+            data = { data => camelize(data) }
+          elsif data.is_a? Hash
+            data = Hash[data.map do |k,v|
+              if v.is_a? Symbol
+                [k, camelize(v)]
+              else
+                [k,v]
+              end
+            end]
+          end
+          if options.has_key?(:root)
+            options[:root] = camelize(options[:root])
+          end
+        end
+        @_options[:"#{options_prefix}child"].push({ :data => data, :options => options, :block => block })
       end
 
       # Glues data from a child node to the json_output
       # glue(@user) { attribute :full_name => :user_full_name }
       define_method "#{prefix}glue" do |data, options={}, &block|
-        @_options[:"#{prefix}glue"].push({ :data => data, :options => options, :block => block })
+        @_options[:"#{options_prefix}glue"].push({ :data => data, :options => options, :block => block })
       end
     end
 
@@ -213,6 +235,13 @@ module Rabl
     alias_method :helpers, :helper
 
     protected
+
+    def camelize(name)
+      binding.pry if name.nil?
+      name = name.to_s if name.is_a?(Symbol)
+      name = name.camelize(:lower) # TODO config
+      name.to_sym
+    end
 
     # Returns a guess at the default object for this template
     # default_object => @user

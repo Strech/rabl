@@ -212,6 +212,18 @@ context "Rabl::Engine" do
       end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
     end
 
+    context "#camelized_attribute" do
+      asserts "that it adds an attribute or method to be included in output using camelCase" do
+        template = rabl %{
+          object @user
+          camelized_attribute :some_attr
+        }
+        scope = Object.new
+        scope.instance_variable_set :@user, User.new
+        JSON.parse(template.render(scope))
+      end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\"}}")
+    end
+
     context "#code" do
       asserts "that it can create an arbitraty code node" do
         template = rabl %{
@@ -361,6 +373,42 @@ context "Rabl::Engine" do
         scope.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO'), User.new(:name => 'two', :city => 'DOS')]
         template.render(scope)
       end.equals "{\"user\":{\"name\":\"leo\",\"people\":[{\"item\":{\"city\":\"UNO\"}},{\"item\":{\"city\":\"DOS\"}}]}}"
+    end
+
+    context "#camelized_child" do
+      asserts "that it can create a child node" do
+        template = rabl %{
+          object @user
+          attribute :name
+          camelized_child(:best_hobby) { attribute :name }
+        }
+        scope = Object.new
+        scope.instance_variable_set :@user, User.new(name: 'leo')
+        JSON.parse(template.render(scope))
+      end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"bestHobby\":{\"name\":\"Reading\"}}}")
+
+      asserts "that it can create a child node with different key" do
+        template = rabl %{
+          object @user
+          attribute :name
+          camelized_child(@user => :some_person) { attribute :city }
+        }
+        scope = Object.new
+        scope.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA')
+        JSON.parse(template.render(scope))
+      end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"somePerson\":{\"city\":\"LA\"}}}")
+
+      asserts "it allows modification of both labels for a child collection" do
+        template = rabl %{
+          object @user
+          attribute :name
+          camelized_child(@users, :root => "crazy_people", :object_root => 'item') { attribute :city }
+        }
+        scope = Object.new
+        scope.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA')
+        scope.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO'), User.new(:name => 'two', :city => 'DOS')]
+        template.render(scope)
+      end.equals "{\"user\":{\"name\":\"leo\",\"crazyPeople\":[{\"item\":{\"city\":\"UNO\"}},{\"item\":{\"city\":\"DOS\"}}]}}"
     end
 
     context "#glue" do
