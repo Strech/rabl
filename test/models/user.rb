@@ -1,6 +1,6 @@
 unless defined?(User)
   class User
-    attr_accessor :age, :city, :name, :first, :float, :hobbies, :some_attr, :best_hobby
+    attr_accessor :age, :city, :name, :first, :float, :hobbies, :some_attr, :another_attr, :best_hobby
 
     DEFAULT_AGE      = 24
     DEFAULT_CITY     = 'irvine'
@@ -10,9 +10,10 @@ unless defined?(User)
     DEFAULT_HOBBIES  = ['Photography']
     DEFAULT_BEST_HOBBY = 'Reading'
     DEFAULT_SOME_ATTR = 'value'
+    DEFAULT_ANOTHER_ATTR = 'another value'
 
     def initialize(attributes={})
-      %w(age city name first float hobbies best_hobby some_attr).each do |attr|
+      %w(age city name first float hobbies best_hobby some_attr another_attr).each do |attr|
         self.send "#{attr}=", (attributes.has_key?(attr.to_sym) ? attributes[attr.to_sym] : self.class.const_get("DEFAULT_#{attr.upcase}"))
       end
       self.hobbies = self.hobbies.map { |h| Hobby.new(h) }
