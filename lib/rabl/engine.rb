@@ -122,6 +122,11 @@ module Rabl
       @_data_object = data_object(data)
     end
 
+    # used inside of child template
+    def parent_object
+      @_options[:parent_object]
+    end
+
     def root_name
       return @_data_name if defined?(@_data_name)
 

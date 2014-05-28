@@ -184,6 +184,8 @@ module Rabl
       filters = inherited_filters(result_name)
       engine_options.merge!(:filters => filters) if filters
 
+      engine_options.merge!(:parent_object => @_object)
+
       @_result[result_name] = self.object_to_hash(object, engine_options, &block)
     end
 
