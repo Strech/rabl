@@ -237,7 +237,6 @@ module Rabl
     protected
 
     def camelize(name)
-      binding.pry if name.nil?
       name = name.to_s if name.is_a?(Symbol)
       name = name.camelize(:lower) # TODO config
       name.to_sym
