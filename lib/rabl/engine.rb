@@ -166,7 +166,7 @@ module Rabl
     end
     alias_method :filters, :filter
 
-    {'' => '', 'allowed_' => 'allowed_', 'camelized_' => ''}.each do |prefix, options_prefix|
+    {'' => '', 'allowed_' => 'allowed_', 'camelized_' => '', 'allowed_camelized_' => 'allowed_'}.each do |prefix, options_prefix|
       # Indicates an attribute or method should be included in the json output
       # attribute :foo, :as => "bar"
       # attribute :foo => :bar, :bar => :baz
@@ -178,7 +178,7 @@ module Rabl
         else # array of attributes i.e :foo, :bar, :baz
           attr_options = args.extract_options!
           args.each do |name|
-            attr_options[:as] = camelize(name) if prefix == 'camelized_' && !name.nil?
+            attr_options[:as] = camelize(name) if prefix.match(/camelized_/) && !name.nil?
             @_options[:"#{options_prefix}attributes"][name] = attr_options.dup
           end
         end
@@ -189,7 +189,7 @@ module Rabl
       # node(:foo) { "bar" }
       # node(:foo, :if => lambda { ... }) { "bar" }
       define_method "#{prefix}node" do |name = nil, options={}, &block|
-        options[:as] = camelize(name) if prefix == 'camelized_' && !name.nil?
+        options[:as] = camelize(name) if prefix.match(/camelized_/) && !name.nil?
         @_options[:"#{options_prefix}node"].push({ :name => name, :options => options, :block => block })
       end
       alias_method :"#{prefix}code", :"#{prefix}node"
@@ -199,7 +199,7 @@ module Rabl
       # child(@user) { attribute :full_name }
       # child(@user => :user) { attribute :full_name }
       define_method "#{prefix}child" do |data, options={}, &block|
-        if prefix == 'camelized_'
+        if prefix.match(/camelized_/)
           if data.is_a? Symbol
             data = { data => camelize(data) }
           elsif data.is_a? Hash
@@ -304,11 +304,11 @@ module Rabl
 
     # Resets the options parsed from a rabl template.
     def reset_options!(scope)
-      ["", "allowed_"].each do |prefix|
-        @_options[:"#{prefix}attributes"] = {}
-        @_options[:"#{prefix}node"] = []
-        @_options[:"#{prefix}child"] = []
-        @_options[:"#{prefix}glue"] = []
+      ["", "allowed_"].each do |key_prefix|
+        @_options[:"#{key_prefix}attributes"] = {}
+        @_options[:"#{key_prefix}node"] = []
+        @_options[:"#{key_prefix}child"] = []
+        @_options[:"#{key_prefix}glue"] = []
       end
       @_options[:extends] = []
       @_options[:root_name]  = nil
