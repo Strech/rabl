@@ -223,28 +223,28 @@ context "Rabl::Builder" do
     asserts "that it generates with an object" do
       b = builder :child => [{ :data => @user, :options => {}, :block => lambda { |u| attribute :name } }]
       mock(b).data_name(@user) { :user }
-      mock(b).object_to_hash(@user, { :root => false }).returns('xyz').subject
+      mock(b).object_to_hash(@user, { :root => false, parent_object: @user }).returns('xyz').subject
       b.build(@user)
     end.equivalent_to({ :user => 'xyz'})
 
     asserts "that it generates with an collection and child_root" do
       b = builder :child => [{ :data => @users, :options => {}, :block => lambda { |u| attribute :name } }], :child_root => true
       mock(b).data_name(@users) { :users }
-      mock(b).object_to_hash(@users, { :root => true, :child_root => true }).returns('xyz').subject
+      mock(b).object_to_hash(@users, { :root => true, :child_root => true, parent_object: @user }).returns('xyz').subject
       b.build(@user)
     end.equivalent_to({ :users => 'xyz'})
 
     asserts "that it generates with an collection and no child root" do
       b = builder :child => [{ :data => @users, :options => {}, :block => lambda { |u| attribute :name } }], :child_root => false
       mock(b).data_name(@users) { :users }
-      mock(b).object_to_hash(@users, { :root => false, :child_root => false }).returns('xyz').subject
+      mock(b).object_to_hash(@users, { :root => false, :child_root => false, parent_object: @user }).returns('xyz').subject
       b.build(@user)
     end.equivalent_to({ :users => 'xyz'})
 
     asserts "that it generates with an collection and a specified object_root_name and root" do
       ops = { :object_root => "person", :root => :people }
       b = builder :child => [{ :data => @users, :options => ops, :block => lambda { |u| attribute :name } }], :child_root => true
-      mock(b).object_to_hash(@users, { :root => "person", :object_root_name => "person", :child_root => true }).returns('xyz').subject
+      mock(b).object_to_hash(@users, { :root => "person", :object_root_name => "person", :child_root => true, parent_object: @user }).returns('xyz').subject
       b.build(@user)
     end.equivalent_to({ :people => 'xyz'})
 
