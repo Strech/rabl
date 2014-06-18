@@ -71,7 +71,9 @@ module Rabl
       if Rabl.configuration.raise_on_missing_attribute
         requested_keys = filters.keys
         if (missing = requested_keys - @_result.keys.map(&:to_s)).present?
-          raise MissingAttribute.new("Failed to render missing attribute #{missing.join(',')}")
+          msg = "Failed to render missing attribute #{missing.join(',')}"
+          msg << " on #{@_object.class.name}" if @_object
+          raise MissingAttribute.new(msg)
         end
       end
 
@@ -256,8 +258,10 @@ module Rabl
       if @_object.respond_to?(name)
         return true
       elsif Rabl.configuration.raise_on_missing_attribute
-        raise MissingAttribute.new("Failed to render missing attribute #{name}")
-      else
+        msg = "Failed to render missing attribute #{name}"
+        msg << " on #{@_object.class.name}" if @_object
+        raise MissingAttribute.new(msg)
+      els
         return false
       end
     end
