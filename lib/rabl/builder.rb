@@ -30,10 +30,8 @@ module Rabl
 
     def default_filter_mode(filters={})
       if filters.empty? || filters.has_key?(Filter::DEFAULT.to_s)
-        filters.except!(Filter::DEFAULT.to_s)
         Filter::DEFAULT
       elsif filters.has_key?(Filter::ALL.to_s)
-        filters.except!(Filter::ALL.to_s)
         Filter::ALL
       else
         Filter::CUSTOM
@@ -71,7 +69,7 @@ module Rabl
 
       # some assert
       if Rabl.configuration.raise_on_missing_attribute
-        requested_keys = @options[:filters].keys - [Filter::DEFAULT, Filter::ALL]
+        requested_keys = filters.keys
         if (missing = requested_keys - @_result.keys.map(&:to_s)).present?
           raise MissingAttribute.new("Failed to render missing attribute #{missing.join(',')}")
         end
@@ -110,9 +108,13 @@ module Rabl
       end
     end
 
+    def filters
+      @options[:filters].except(Filter::DEFAULT, Filter::ALL, Filter::DEFAULT.to_s, Filter::ALL.to_s)
+    end
+
     def update_settings(type)
       settings_type = SETTING_TYPES[type]
-      unless @options[:filter_mode] == Filter::DEFAULT && @options[:filters].blank?
+      unless @options[:filter_mode] == Filter::DEFAULT && filters.blank?
         @options[:"allowed_#{type}"].each do |settings|
           send(type, settings[settings_type], settings[:options], &settings[:block])
         end if @options.has_key?(:"allowed_#{type}")
@@ -124,7 +126,7 @@ module Rabl
     end
 
     def update_attributes
-      unless @options[:filter_mode] == Filter::DEFAULT && @options[:filters].blank?
+      unless @options[:filter_mode] == Filter::DEFAULT && filters.blank?
         @options[:allowed_attributes].each_pair do |attribute, settings|
           attribute(attribute, settings)
         end if @options.has_key?(:allowed_attributes)
@@ -191,7 +193,7 @@ module Rabl
 
     def inherited_filters(result_name)
       return unless @options.has_key?(:filters)
-      inherited_filters = @options[:filters][result_name.to_s] || {}
+      inherited_filters = filters[result_name.to_s] || {}
       return { Filter::ALL.to_s => {} } if @options[:filter_mode] == Filter::ALL
       return if inherited_filters.empty?
       inherited_filters
@@ -262,7 +264,7 @@ module Rabl
 
     def attribute_selected?(name)
       if @options[:filter_mode] == Filter::CUSTOM
-        @options[:filters].include?(name.to_s)
+        filters.include?(name.to_s)
       else
         true
       end
