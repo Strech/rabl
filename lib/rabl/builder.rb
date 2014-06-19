@@ -19,20 +19,18 @@ module Rabl
       @options    = options
 
       filters = (options[:filters] || {}).except!(Filter::CUSTOM.to_s)
-      filter_mode = default_filter_mode(filters)
-
-      @options[:filter_mode] = filter_mode
       @options[:filters] = filters
+      @options[:filter_mode] = default_filter_mode
 
       @_scope     = options[:scope]
       @_view_path = options[:view_path]
     end
 
-    def default_filter_mode(filters={})
-      if filters.empty? || filters.has_key?(Filter::DEFAULT.to_s)
-        Filter::DEFAULT
-      elsif filters.has_key?(Filter::ALL.to_s)
+    def default_filter_mode
+      if @options[:filters].has_key?(Filter::ALL.to_s)
         Filter::ALL
+      elsif filters.empty? || @options[:filters].has_key?(Filter::DEFAULT.to_s)
+        Filter::DEFAULT
       else
         Filter::CUSTOM
       end

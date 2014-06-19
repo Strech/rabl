@@ -162,6 +162,7 @@ module Rabl
 
     # TODO: reject if it's extended template
     def filter(filters={})
+      @_options[:filters] ||= {}
       @_options[:filters].merge!(filters)
     end
     alias_method :filters, :filter
