@@ -196,6 +196,10 @@ module Rabl
       inherited_filters = filters[result_name.to_s] || {}
       return { Filter::ALL.to_s => {} } if @options[:filter_mode] == Filter::ALL
       return if inherited_filters.empty?
+      # explicit means inherits
+      if @options[:filters].key?(Filter::DEFAULT.to_s)
+        inherited_filters.merge!(Filter::DEFAULT.to_s => {})
+      end
       inherited_filters
     end
 
