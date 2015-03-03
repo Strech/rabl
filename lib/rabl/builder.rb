@@ -116,7 +116,7 @@ module Rabl
       settings_type = SETTING_TYPES[type]
       unless @options[:filter_mode] == Filter::DEFAULT && filters.blank?
         @options[:"allowed_#{type}"].each do |settings|
-          send(type, settings[settings_type], settings[:options], &settings[:block])
+          send(type, settings[settings_type], (settings[:options] || {}).merge(optional: true), &settings[:block])
         end if @options.has_key?(:"allowed_#{type}")
       end
 
@@ -128,7 +128,7 @@ module Rabl
     def update_attributes
       unless @options[:filter_mode] == Filter::DEFAULT && filters.blank?
         @options[:allowed_attributes].each_pair do |attribute, settings|
-          attribute(attribute, settings)
+          attribute(attribute, (settings || {}).merge(optional: true))
         end if @options.has_key?(:allowed_attributes)
       end
 
@@ -143,7 +143,7 @@ module Rabl
     def attribute(name, options={})
       if @_object && attribute_present?(name) && resolve_condition(options)
         result_name = (options[:as] || name).to_sym
-        if attribute_selected?(result_name) && !@_result.has_key?(result_name)
+        if (!options[:optional] || attribute_selected?(result_name)) && !@_result.has_key?(result_name)
           attribute = data_object_attribute(name)
           @_result[result_name] = attribute
         end
@@ -156,7 +156,7 @@ module Rabl
     # node(:foo, :if => lambda { |m| m.foo.present? }) { "bar" }
     def node(name, options={}, &block)
       return unless resolve_condition(options)
-      return false unless attribute_selected?(name)
+      return false unless (!options[:optional] || attribute_selected?(name))
       result = block.call(@_object)
       if name.present?
         @_result[name.to_sym] = result
@@ -173,7 +173,7 @@ module Rabl
     def child(data, options={}, &block)
       return false unless data.present? && resolve_condition(options)
       name   = is_name_value?(options[:root]) ? options[:root] : data_name(data)
-      return false unless attribute_selected?(name)
+      return false unless (!options[:optional] || attribute_selected?(name))
       result_name = name.to_sym
       return false if @_result.has_key?(result_name)
 
@@ -207,7 +207,7 @@ module Rabl
     # glue(@user) { attribute :full_name => :user_full_name }
     def glue(data, options={}, &block)
       return false unless data.present? && resolve_condition(options)
-      return false unless attribute_selected?(data)
+      return false unless (!options[:optional] || attribute_selected?(data))
       object = data_object(data)
       glued_attributes = self.object_to_hash(object, :root => false, &block)
       @_result.merge!(glued_attributes) if glued_attributes

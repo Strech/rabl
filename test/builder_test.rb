@@ -142,6 +142,14 @@ context "Rabl::Builder" do
       end.equivalent_to({})
     end
 
+    context "when not filtered but has default attributes" do
+      setup { builder(default_attributes.merge(:attributes => { :age => {} })) }
+
+      asserts "shows only defaults" do
+        topic.build(@user)
+      end.equivalent_to({ :age => 24 })
+    end
+
     context "symbolized keys" do
       setup { builder(default_attributes.merge(:filters => { 'name' => {} })) }
 
@@ -294,7 +302,7 @@ context "Rabl::Builder" do
         :filters => { 'user' => { 'age' => {} } }
       )
       b.build(@user)
-    end.equivalent_to({ :user => { :age => 24 } })
+    end.equivalent_to({ :user => { :age => 24, :city => 'irvine' } })
 
     asserts "that it prefers uses all attributes from allowed_child when filter empty" do
       b = builder(
