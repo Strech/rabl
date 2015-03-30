@@ -13,12 +13,26 @@ module Rabl
     # data_object(@user => :person) => @user
     # data_object(:user => :person) => @_object.send(:user)
     def data_object(data)
+      #binding.pry
+      #puts "obj=#{@_object.inspect}, data=#{data.inspect}\n"
       if rabl_hash? && data.is_a?(Hash) && data.keys.size == 1 && !data.keys[0].is_a?(Symbol)
-        return data.keys[0][data.values[0]]
+        if data.keys[0].is_a?(Hash)
+          return data.keys[0][data.values[0]]
+        else
+          return data.keys[0]
+        end
       end
 
       data = (data.is_a?(Hash) && data.keys.size == 1) ? data.keys.first : data
-      data.is_a?(Symbol) && defined?(@_object) && @_object ? (rabl_hash? ? @_object[data] : @_object.__send__(data)) : data
+
+      if data.is_a?(Symbol) && defined?(@_object) && @_object
+        rabl_hash? ? @_object[data] : @_object.__send__(data)
+      else
+        data
+      end
+    #rescue
+    #  binding.pry
+    #  1
     end
 
     # data_object_attribute(data) => @_object.send(data)
