@@ -167,6 +167,10 @@ module Rabl
     end
     alias_method :filters, :filter
 
+    def rabl_hash
+      @_options[:rabl_hash] = true
+    end
+
     {'' => '', 'allowed_' => 'allowed_', 'camelized_' => '', 'allowed_camelized_' => 'allowed_'}.each do |prefix, options_prefix|
       # Indicates an attribute or method should be included in the json output
       # attribute :foo, :as => "bar"
@@ -315,6 +319,7 @@ module Rabl
       @_options[:root_name]  = nil
       @_options[:format] ||= self.request_format
       @_options[:filters] ||= {}
+      @_options[:rabl_hash] ||= false
       @_options[:filter_mode] ||= Filter::DEFAULT
       @_options[:scope] = scope
     end
@@ -381,3 +386,4 @@ module Rabl
     end
   end
 end
+

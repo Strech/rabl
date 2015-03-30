@@ -21,6 +21,7 @@ module Rabl
       filters = (options[:filters] || {}).except!(Filter::CUSTOM.to_s)
       @options[:filters] = filters
       @options[:filter_mode] = default_filter_mode
+      @options[:rabl_hash] = options[:rabl_hash]
 
       @_scope     = options[:scope]
       @_view_path = options[:view_path]
@@ -185,6 +186,7 @@ module Rabl
 
       filters = inherited_filters(result_name)
       engine_options.merge!(:filters => filters) if filters
+      engine_options.merge!(:rabl_hash => @options[:rabl_hash])
 
       engine_options.merge!(:parent_object => @_object)
 
@@ -257,7 +259,7 @@ module Rabl
     # Checks if an attribute is present. If not, check if the configuration specifies that this is an error
     # attribute_present?(created_at) => true
     def attribute_present?(name)
-      if @_object.respond_to?(name)
+      if rabl_hash? ? (@_object.respond_to?(:key?) ? @_object.key?(name) : (@_object[0] == name)) : (@_object.respond_to?(name))
         return true
       elsif Rabl.configuration.raise_on_missing_attribute
         msg = "Failed to render missing attribute #{name}"
@@ -286,6 +288,7 @@ module Rabl
     # Caches the results of the block based on object cache_key
     # cache_results { compile_hash(options) }
     def cache_results(&block)
+      # FIXME : Cache key for Hash object ???
       if template_cache_configured? && Rabl.configuration.cache_all_output && @_object.respond_to?(:cache_key)
         result_cache_key = [@_object, @options[:root_name], @options[:format]]
         fetch_result_from_cache(result_cache_key, &block)
@@ -296,3 +299,4 @@ module Rabl
 
   end
 end
+

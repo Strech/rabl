@@ -5,17 +5,27 @@ module Rabl
     # Set of class names known to be objects, not collections
     KNOWN_OBJECT_CLASSES = ['Struct']
 
+    def rabl_hash?
+      !!(@rabl_hash || (@options && @options[:scope].instance_variable_get(:@rabl_hash)))
+    end
+
     # data_object(data) => <AR Object>
     # data_object(@user => :person) => @user
     # data_object(:user => :person) => @_object.send(:user)
     def data_object(data)
       data = (data.is_a?(Hash) && data.keys.size == 1) ? data.keys.first : data
-      data.is_a?(Symbol) && defined?(@_object) && @_object ? @_object.__send__(data) : data
+      data.is_a?(Symbol) && defined?(@_object) && @_object ? (rabl_hash? ? @_object[data] : @_object.__send__(data)) : data
     end
 
     # data_object_attribute(data) => @_object.send(data)
     def data_object_attribute(data)
-      escape_output @_object.__send__(data)
+      output = if rabl_hash?
+        @_object.respond_to?(:key?) ? @_object[data] : @_object[1]
+      else
+        @_object.__send__(data)
+      end
+
+      escape_output output
     end
 
     # data_name(data) => "user"
@@ -27,7 +37,10 @@ module Rabl
       return unless data_token # nil or false
       return data_token.values.first if data_token.is_a?(Hash) # @user => :user
       data = data_object(data_token)
+
       if is_collection?(data) # data is a collection
+        return data_token.to_s.pluralize if data_token.is_a?(Symbol) && rabl_hash?
+
         object_name = data.table_name if data.respond_to?(:table_name)
         if !object_name && data.respond_to?(:first)
           first = data.first
@@ -36,6 +49,8 @@ module Rabl
         object_name ||= data_token if data_token.is_a?(Symbol)
         object_name
       elsif is_object?(data) # data is an object
+        return data_token if data_token.is_a?(Symbol) && rabl_hash?
+
         object_name = object_root_name if object_root_name
         object_name ||= data if data.is_a?(Symbol)
         object_name ||= collection_root_name.to_s.singularize if collection_root_name
@@ -66,16 +81,26 @@ module Rabl
     # is_object?([]) => false
     # is_object?({}) => false
     def is_object?(obj)
-      obj && (!data_object(obj).respond_to?(:map) || !data_object(obj).respond_to?(:each) ||
-       (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).any?)
+      if rabl_hash?
+        obj && (data_object(obj).is_a?(Hash) ||
+         (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).any?)
+      else
+        obj && (!data_object(obj).respond_to?(:map) || !data_object(obj).respond_to?(:each) ||
+         (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).any?)
+      end
     end
 
     # Returns true if the obj is a collection of items
     # is_collection?(@user) => false
     # is_collection?([]) => true
     def is_collection?(obj)
-      obj && data_object(obj).respond_to?(:map) && data_object(obj).respond_to?(:each) &&
-        (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).empty?
+      if rabl_hash?
+        obj && data_object(obj).is_a?(Array) &&
+          (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).empty?
+      else
+        obj && data_object(obj).respond_to?(:map) && data_object(obj).respond_to?(:each) &&
+          (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).empty?
+      end
     end
 
     # Returns the scope wrapping this engine, used for retrieving data, invoking methods, etc
@@ -126,3 +151,4 @@ module Rabl
 
   end
 end
+
