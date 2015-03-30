@@ -13,7 +13,9 @@ module Rabl
     # data_object(@user => :person) => @user
     # data_object(:user => :person) => @_object.send(:user)
     def data_object(data)
-      return data.keys[0][data.values[0]] if data.is_a?(Hash) && data.keys.size == 1 && !data.keys[0].is_a?(Symbol)
+      if rabl_hash? && data.is_a?(Hash) && data.keys.size == 1 && !data.keys[0].is_a?(Symbol)
+        return data.keys[0][data.values[0]]
+      end
 
       data = (data.is_a?(Hash) && data.keys.size == 1) ? data.keys.first : data
       data.is_a?(Symbol) && defined?(@_object) && @_object ? (rabl_hash? ? @_object[data] : @_object.__send__(data)) : data
