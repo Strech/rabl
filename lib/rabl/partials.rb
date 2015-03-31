@@ -10,7 +10,7 @@ module Rabl
       raise ArgumentError, "Must provide an :object option to render a partial" unless options.has_key?(:object)
       object, view_path = options.delete(:object), options[:view_path] || @_view_path
       source, location = self.fetch_source(file, :view_path => view_path)
-      engine_options = options.merge(:source => source, :source_location => location, :template => file)
+      engine_options = options.merge(:source => source, :source_location => location, :template => file, partial_extract: true)
       self.object_to_hash(object, engine_options, &block)
     end
 
@@ -24,6 +24,11 @@ module Rabl
       return object if object.nil?
       return [] if is_collection?(object) && object.blank? # empty collection
       engine_options = options.reverse_merge(:format => "hash", :view_path => @_view_path, :root => (options[:root] || false))
+
+      if rabl_hash? && options.delete(:partial_extract)
+        object = object.is_a?(Hash) && object.keys.size == 1 ? object.values[0] : object
+      end
+
       Rabl::Engine.new(options[:source], engine_options).render(@_scope, :object => object, :locals => options[:locals], &block)
     end
 
@@ -106,3 +111,4 @@ module Rabl
 
   end # Partials
 end # Rabl
+
