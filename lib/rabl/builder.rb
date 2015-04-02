@@ -142,8 +142,9 @@ module Rabl
     # attribute :foo, :as => "bar"
     # attribute :foo, :as => "bar", :if => lambda { |m| m.foo }
     def attribute(name, options={})
+      result_name = (options[:as] || name).to_sym
+      name = result_name if rabl_hash?
       if @_object && attribute_present?(name) && resolve_condition(options)
-        result_name = (options[:as] || name).to_sym
         if (!options[:optional] || attribute_selected?(result_name)) && !@_result.has_key?(result_name)
           attribute = data_object_attribute(name)
           @_result[result_name] = attribute
@@ -178,6 +179,7 @@ module Rabl
       result_name = name.to_sym
       return false if @_result.has_key?(result_name)
 
+      data = result_name if rabl_hash?
       object = data_object(data)
       include_root = is_collection?(object) && options.fetch(:object_root, @options[:child_root]) # child @users
       engine_options = @options.slice(:child_root).merge(:root => include_root)
