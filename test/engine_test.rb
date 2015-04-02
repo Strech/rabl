@@ -380,14 +380,12 @@ context "Rabl::Engine" do
         template = rabl %{
           object @user => :user
           attribute :city
-          camelized_child(:best_hobby) {
-puts(%Q{child. self:\#{File.open('/tmp/engine.log', 'w') { |f| f.write self.inspect}}})
-attribute(:name) }
+          camelized_child(:best_hobby) { attribute :name }
         }
         scope = Object.new
         scope.instance_variable_set :@user, User.new(name: 'leo')
         JSON.parse(template.render(scope))
-      end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"bestHobby\":{\"name\":\"Reading\"}}}")
+      end.equals JSON.parse("{\"user\":{\"city\":\"irvine\",\"bestHobby\":{\"name\":\"Reading\"}}}")
 
       # asserts "that it can create a child node with different key" do
       #   template = rabl %{

@@ -108,7 +108,7 @@ module Rabl
     # is_object?({}) => false
     def is_object?(obj)
       if rabl_hash?
-        obj && (data_object(obj).is_a?(Hash) ||
+        obj && (obj.is_a?(Hash) ||
          (KNOWN_OBJECT_CLASSES & obj.class.ancestors.map(&:name)).any?)
       else
         obj && (!data_object(obj).respond_to?(:map) || !data_object(obj).respond_to?(:each) ||

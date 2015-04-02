@@ -334,16 +334,14 @@ context "Rabl::Engine" do
       asserts "that it can create a child node" do
         template = rabl %{
           object @user => :user
-          #attribute :city
-          camelized_child(:best_hobby) {
-puts(%Q{child. self:\#{File.open('/tmp/hash_engine.log', 'w') { |f| f.write self.inspect}}})
-attribute(:name) }
+          attribute :city
+          camelized_child(:best_hobby) { attribute :name }
         }
 
         attributes = User.new(name: 'leo').attributes.tap { |attr| attr['bestHobby'] = attr.delete('best_hobby') }
         scp = scope('user', attributes)
         JSON.parse(template.render(scp))
-      end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"bestHobby\":{\"name\":\"Reading\"}}}")
+      end.equals JSON.parse("{\"user\":{\"city\":\"irvine\",\"bestHobby\":{\"name\":\"Reading\"}}}")
 
       # asserts "that it can create a child node with different key" do
       #   template = rabl %{
