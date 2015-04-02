@@ -42,293 +42,293 @@ context "Rabl::Engine" do
       end
     end
 
-  #   context "#cache" do
-  #     asserts "does not modify output" do
-  #       template = rabl %q{
-  #         object @user => :user
-  #         cache @user
-  #       }
-  #       template.render(scope 'user', @user)
-  #     end.matches "{\"user\":{}}"
-  #   end
+    context "#cache" do
+      asserts "does not modify output" do
+        template = rabl %q{
+          object @user => :user
+          cache @user
+        }
+        template.render(scope 'user', @user)
+      end.matches "{\"user\":{}}"
+    end
 
-  #   context "#object" do
-  #     asserts "that it can set root node" do
-  #       template = rabl %q{
-  #         object @user => :person
-  #       }
-  #       template.render(scope 'user', @user)
-  #     end.equals "{\"person\":{}}"
+    context "#object" do
+      asserts "that it can set root node" do
+        template = rabl %q{
+          object @user => :person
+        }
+        template.render(scope 'user', @user)
+      end.equals "{\"person\":{}}"
 
-  #     asserts "that it can set root node with a nil object and explicit name" do
-  #       template = rabl %q{
-  #         object @user => :person
-  #       }
-  #       template.render(scope 'user', nil)
-  #     end.equals "{\"person\":{}}"
+      asserts "that it can set root node with a nil object and explicit name" do
+        template = rabl %q{
+          object @user => :person
+        }
+        template.render(scope 'user', nil)
+      end.equals "{\"person\":{}}"
 
-  #     asserts "that it can use non-ORM objects" do
-  #       template = rabl %q{
-  #         object @other => :ormless
-  #       }
-  #       template.render(scope 'other', {})
-  #     end.equals "{\"ormless\":{}}"
+      asserts "that it can use non-ORM objects" do
+        template = rabl %q{
+          object @other => :ormless
+        }
+        template.render(scope 'other', {})
+      end.equals "{\"ormless\":{}}"
 
-  #     asserts "that it works with nested controllers" do
-  #       template = rabl ""
-  #       scope = NestedScope::User.new
-  #       scope.instance_variable_set :@user, @user
-  #       template.render(scope)
-  #     end.matches "{}"
-  #   end
+      asserts "that it works with nested controllers" do
+        template = rabl ""
+        scope = NestedScope::User.new
+        scope.instance_variable_set :@user, @user
+        template.render(scope)
+      end.matches "{}"
+    end
 
-  #   context "#collection" do
-  #     # FIXME
-  #     # asserts "that it sets object to be blank array" do
-  #     #   template = rabl %{
-  #     #     collection []
-  #     #   }
-  #     #   scope = Object.new
-  #     #   template.render(scope)
-  #     # end.equals "[]"
+    context "#collection" do
+      # FIXME
+      # asserts "that it sets object to be blank array" do
+      #   template = rabl %{
+      #     collection []
+      #   }
+      #   scope = Object.new
+      #   template.render(scope)
+      # end.equals "[]"
 
-  #     # asserts "that it sets root node for objects" do
-  #     #   template = rabl %{
-  #     #     collection @users => :people
-  #     #   }
-  #     #   template.render(scope 'users', @users)
-  #     # end.equals "{\"people\":[{\"person\":{}},{\"person\":{}}]}"
+      # asserts "that it sets root node for objects" do
+      #   template = rabl %{
+      #     collection @users => :people
+      #   }
+      #   template.render(scope 'users', @users)
+      # end.equals "{\"people\":[{\"person\":{}},{\"person\":{}}]}"
 
-  #     # asserts "that it doesn't set root node for objects when specified" do
-  #     #  template = rabl %{
-  #     #    collection @users, :root => :people, :object_root => false
-  #     #  }
-  #     #  scope = Object.new
-  #     #  scope.instance_variable_set :@users, [User.new, User.new]
-  #     #  template.render(scope)
-  #     # end.equals "{\"people\":[{},{}]}"
+      # asserts "that it doesn't set root node for objects when specified" do
+      #  template = rabl %{
+      #    collection @users, :root => :people, :object_root => false
+      #  }
+      #  scope = Object.new
+      #  scope.instance_variable_set :@users, [User.new, User.new]
+      #  template.render(scope)
+      # end.equals "{\"people\":[{},{}]}"
 
-  #     # asserts "that it sets proper object and root names when specified" do
-  #     #  template = rabl %{
-  #     #    collection @users, :root => :people, :object_root => :user
-  #     #  }
-  #     #  scope = Object.new
-  #     #  scope.instance_variable_set :@users, [User.new, User.new]
-  #     #  template.render(scope)
-  #     # end.equals "{\"people\":[{\"user\":{}},{\"user\":{}}]}"
+      # asserts "that it sets proper object and root names when specified" do
+      #  template = rabl %{
+      #    collection @users, :root => :people, :object_root => :user
+      #  }
+      #  scope = Object.new
+      #  scope.instance_variable_set :@users, [User.new, User.new]
+      #  template.render(scope)
+      # end.equals "{\"people\":[{\"user\":{}},{\"user\":{}}]}"
 
-  #     # asserts "that it can use non-ORM objects" do
-  #     #   template = rabl %q{
-  #     #     object @others
-  #     #   }
-  #     #   scope = Object.new
-  #     #   scope.instance_variable_set :@others, [Ormless.new, Ormless.new]
-  #     #   template.render(scope)
-  #     # end.equals "[{\"ormless\":{}},{\"ormless\":{}}]"
-  #   end
+      # asserts "that it can use non-ORM objects" do
+      #   template = rabl %q{
+      #     object @others
+      #   }
+      #   scope = Object.new
+      #   scope.instance_variable_set :@others, [Ormless.new, Ormless.new]
+      #   template.render(scope)
+      # end.equals "[{\"ormless\":{}},{\"ormless\":{}}]"
+    end
 
-  #   context "#attribute" do
-  #     asserts "that it adds an attribute or method to be included in output" do
-  #       template = rabl %{
-  #         object @user => :user
-  #         attribute :name
-  #       }
-  #       scp = scope('user', User.new(:name => 'irvine').attributes)
-  #       JSON.parse(template.render(scp))
-  #     end.equals JSON.parse("{\"user\":{\"name\":\"irvine\"}}")
+    context "#attribute" do
+      asserts "that it adds an attribute or method to be included in output" do
+        template = rabl %{
+          object @user => :user
+          attribute :name
+        }
+        scp = scope('user', User.new(:name => 'irvine').attributes)
+        JSON.parse(template.render(scp))
+      end.equals JSON.parse("{\"user\":{\"name\":\"irvine\"}}")
 
-  #     asserts "that it can add attribute under a different key name through :as" do
-  #       template = rabl %{
-  #         object @user => :user
-  #         attribute :name, :as => 'city'
-  #       }
-  #       scp = scope('user', User.new(:name => 'irvine').attributes)
-  #       JSON.parse(template.render(scp))
-  #     end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
+      asserts "that it can add attribute under a different key name through :as" do
+        template = rabl %{
+          object @user => :user
+          attribute :name, :as => 'city'
+        }
+        scp = scope('user', User.new(:name => 'irvine').attributes)
+        JSON.parse(template.render(scp))
+      end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
 
-  #     asserts "that it can add attribute under a different key name through hash" do
-  #       template = rabl %{
-  #         object @user => :user
-  #         attribute :name => :city
-  #       }
-  #       scp = scope('user', User.new(:name => 'irvine').attributes)
-  #       JSON.parse(template.render(scp))
-  #     end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
-  #   end
+      asserts "that it can add attribute under a different key name through hash" do
+        template = rabl %{
+          object @user => :user
+          attribute :name => :city
+        }
+        scp = scope('user', User.new(:name => 'irvine').attributes)
+        JSON.parse(template.render(scp))
+      end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
+    end
 
-  #   context "#camelized_attribute" do
-  #     asserts "that it adds an attribute or method to be included in output using camelCase" do
-  #       template = rabl %{
-  #         object @user => :user
-  #         camelized_attributes :some_attr, :another_attr
-  #       }
-  #       scp = scope('user', User.new.attributes)
-  #       JSON.parse(template.render(scp))
-  #     end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
+    context "#camelized_attribute" do
+      asserts "that it adds an attribute or method to be included in output using camelCase" do
+        template = rabl %{
+          object @user => :user
+          camelized_attributes :some_attr, :another_attr
+        }
+        scp = scope('user', User.new.attributes)
+        JSON.parse(template.render(scp))
+      end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
 
-  #     asserts "that it adds an attribute or method to be included in output using camelCase" do
-  #       template = rabl %{
-  #         object @user => :user
-  #         camelized_attribute :some_attr
-  #         camelized_attribute :another_attr
-  #       }
-  #       scp = scope('user', User.new.attributes)
-  #       JSON.parse(template.render(scp))
-  #     end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
-  #   end
+      asserts "that it adds an attribute or method to be included in output using camelCase" do
+        template = rabl %{
+          object @user => :user
+          camelized_attribute :some_attr
+          camelized_attribute :another_attr
+        }
+        scp = scope('user', User.new.attributes)
+        JSON.parse(template.render(scp))
+      end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
+    end
 
-  #   context "#code" do
-  #     asserts "that it can create an arbitraty code node" do
-  #       template = rabl %{
-  #         code(:foo) { 'bar' }
-  #       }
-  #       template.render(scope 'other', nil)
-  #     end.equals "{\"foo\":\"bar\"}"
+    context "#code" do
+      asserts "that it can create an arbitraty code node" do
+        template = rabl %{
+          code(:foo) { 'bar' }
+        }
+        template.render(scope 'other', nil)
+      end.equals "{\"foo\":\"bar\"}"
 
-  #     asserts "that it can be passed conditionals" do
-  #       template = rabl %{
-  #         code(:foo, :if => lambda { |i| false }) { 'bar' }
-  #       }
-  #       template.render(scope 'other', nil)
-  #     end.equals "{}"
+      asserts "that it can be passed conditionals" do
+        template = rabl %{
+          code(:foo, :if => lambda { |i| false }) { 'bar' }
+        }
+        template.render(scope 'other', nil)
+      end.equals "{}"
 
-  #     # FIXME
-  #     # asserts "that it can merge the result with a collection element given no name" do
-  #     #   template = rabl %{
-  #     #     collection @users
-  #     #     code do |user|
-  #     #       {:name => user.name}
-  #     #     end
-  #     #   }
-  #     #   scope = Object.new
-  #     #   scope.instance_variable_set :@users, [User.new(:name => 'a'), User.new(:name => 'b')]
-  #     #   JSON.parse(template.render(scope))
-  #     # end.equals JSON.parse("[{\"user\":{\"name\":\"a\"}},{\"user\":{\"name\":\"b\"}}]")
+      # FIXME
+      # asserts "that it can merge the result with a collection element given no name" do
+      #   template = rabl %{
+      #     collection @users
+      #     code do |user|
+      #       {:name => user.name}
+      #     end
+      #   }
+      #   scope = Object.new
+      #   scope.instance_variable_set :@users, [User.new(:name => 'a'), User.new(:name => 'b')]
+      #   JSON.parse(template.render(scope))
+      # end.equals JSON.parse("[{\"user\":{\"name\":\"a\"}},{\"user\":{\"name\":\"b\"}}]")
 
-  #     asserts "that it can merge the result on a child node given no name" do
-  #       template = rabl %{
-  #         object @user => :user
-  #         attribute :name
-  #         child(@user => :user) do
-  #           code do |user|
-  #             {:city => user['city']}
-  #           end
-  #         end
-  #       }
-  #       scp = scope('user', User.new(:name => 'leo', :city => 'LA').attributes)
-  #       JSON.parse(template.render(scp))
-  #     end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"user\":{\"city\":\"LA\"}}}")
-  #   end
+      asserts "that it can merge the result on a child node given no name" do
+        template = rabl %{
+          object @user => :user
+          attribute :name
+          child(@user => :user) do
+            code do |user|
+              {:city => user['city']}
+            end
+          end
+        }
+        scp = scope('user', User.new(:name => 'leo', :city => 'LA').attributes)
+        JSON.parse(template.render(scp))
+      end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"user\":{\"city\":\"LA\"}}}")
+    end
 
-  #  context "#child" do
-  #    asserts "that it can create a child node" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        attribute :name
-  #        child(@user => :user) { attribute :city }
-  #      }
-  #      scp = scope('user', User.new(:name => 'leo', :city => 'LA').attributes)
-  #      JSON.parse(template.render(scp))
-  #    end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"user\":{\"city\":\"LA\"}}}")
+   context "#child" do
+     asserts "that it can create a child node" do
+       template = rabl %{
+         object @user => :user
+         attribute :name
+         child(@user => :user) { attribute :city }
+       }
+       scp = scope('user', User.new(:name => 'leo', :city => 'LA').attributes)
+       JSON.parse(template.render(scp))
+     end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"user\":{\"city\":\"LA\"}}}")
 
-  #    asserts "that it can create a child node with different key" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        attribute :name
-  #        child(@user => :person) { attribute :city }
-  #      }
-  #      scp = scope('user', User.new(:name => 'leo', :city => 'LA').attributes)
-  #      JSON.parse(template.render(scp))
-  #    end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"person\":{\"city\":\"LA\"}}}")
+     asserts "that it can create a child node with different key" do
+       template = rabl %{
+         object @user => :user
+         attribute :name
+         child(@user => :person) { attribute :city }
+       }
+       scp = scope('user', User.new(:name => 'leo', :city => 'LA').attributes)
+       JSON.parse(template.render(scp))
+     end.equals JSON.parse("{\"user\":{\"name\":\"leo\",\"person\":{\"city\":\"LA\"}}}")
 
-  #    asserts "that it passes the data object to the block" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        child(@user => :person) do |user|
-  #          attribute :name if user['name'] == 'leo'
-  #        end
-  #      }
-  #      scp = scope('user', User.new(:name => 'leo').attributes)
-  #      template.render(scp)
-  #    end.equals "{\"user\":{\"person\":{\"name\":\"leo\"}}}"
+     asserts "that it passes the data object to the block" do
+       template = rabl %{
+         object @user => :user
+         child(@user => :person) do |user|
+           attribute :name if user['name'] == 'leo'
+         end
+       }
+       scp = scope('user', User.new(:name => 'leo').attributes)
+       template.render(scp)
+     end.equals "{\"user\":{\"person\":{\"name\":\"leo\"}}}"
 
-  #    asserts "it sets root node for child collection" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        attribute :name
-  #        child(@users => :users) { attribute :city }
-  #      }
-  #      scp = Object.new
-  #      scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
-  #      scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
-  #      scp.instance_variable_set :@rabl_hash, true
-  #      template.render(scp)
-  #    end.equals "{\"user\":{\"name\":\"leo\",\"users\":[{\"user\":{\"city\":\"UNO\"}},{\"user\":{\"city\":\"DOS\"}}]}}"
+     asserts "it sets root node for child collection" do
+       template = rabl %{
+         object @user => :user
+         attribute :name
+         child(@users => :users) { attribute :city }
+       }
+       scp = Object.new
+       scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
+       scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
+       scp.instance_variable_set :@rabl_hash, true
+       template.render(scp)
+     end.equals "{\"user\":{\"name\":\"leo\",\"users\":[{\"user\":{\"city\":\"UNO\"}},{\"user\":{\"city\":\"DOS\"}}]}}"
 
-  #    # FIXME
-  #    # asserts "that it chooses a name based on symbol if no elements" do
-  #    #   template = rabl %{
-  #    #     object @bar => :bar
-  #    #     child(:foos) { attribute :city }
-  #    #   }
-  #    #   scp = Object.new
-  #    #   bar = {'foos' => []}
-  #    #   scp.instance_variable_set :@bar, bar
-  #    #   scp.instance_variable_set :@rabl_hash, true
-  #    #   template.render(scp)
-  #    # end.equals "{\"bar\":{\"foos\":[]}}"
+     # FIXME
+     # asserts "that it chooses a name based on symbol if no elements" do
+     #   template = rabl %{
+     #     object @bar => :bar
+     #     child(:foos) { attribute :city }
+     #   }
+     #   scp = Object.new
+     #   bar = {'foos' => []}
+     #   scp.instance_variable_set :@bar, bar
+     #   scp.instance_variable_set :@rabl_hash, true
+     #   template.render(scp)
+     # end.equals "{\"bar\":{\"foos\":[]}}"
 
-  #    asserts "that it chooses a name based on symbol if nil" do
-  #      template = rabl %{
-  #        object @bar => :bar
-  #        child(:foos) { attribute :city }
-  #      }
-  #      scp = Object.new
-  #      bar = {'foos' => nil}
-  #      scp.instance_variable_set :@bar, bar
-  #      scp.instance_variable_set :@rabl_hash, true
-  #      template.render(scp)
-  #    end.equals "{\"bar\":{\"foos\":null}}"
+     asserts "that it chooses a name based on symbol if nil" do
+       template = rabl %{
+         object @bar => :bar
+         child(:foos) { attribute :city }
+       }
+       scp = Object.new
+       bar = {'foos' => nil}
+       scp.instance_variable_set :@bar, bar
+       scp.instance_variable_set :@rabl_hash, true
+       template.render(scp)
+     end.equals "{\"bar\":{\"foos\":null}}"
 
-  #    asserts "it allows suppression of root node for child collection" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        attribute :name
-  #        child({@users => :users}, :object_root => false) { attribute :city }
-  #      }
-  #      scp = Object.new
-  #      scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
-  #      scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
-  #      scp.instance_variable_set :@rabl_hash, true
-  #      template.render(scp)
-  #    end.equals "{\"user\":{\"name\":\"leo\",\"users\":[{\"city\":\"UNO\"},{\"city\":\"DOS\"}]}}"
+     asserts "it allows suppression of root node for child collection" do
+       template = rabl %{
+         object @user => :user
+         attribute :name
+         child({@users => :users}, :object_root => false) { attribute :city }
+       }
+       scp = Object.new
+       scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
+       scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
+       scp.instance_variable_set :@rabl_hash, true
+       template.render(scp)
+     end.equals "{\"user\":{\"name\":\"leo\",\"users\":[{\"city\":\"UNO\"},{\"city\":\"DOS\"}]}}"
 
-  #    asserts "it allows modification of object root node for child collection" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        attribute :name
-  #        child({@users => :users}, :object_root => 'person') { attribute :city }
-  #      }
-  #      scp = Object.new
-  #      scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
-  #      scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
-  #      scp.instance_variable_set :@rabl_hash, true
-  #      template.render(scp)
-  #    end.equals "{\"user\":{\"name\":\"leo\",\"users\":[{\"person\":{\"city\":\"UNO\"}},{\"person\":{\"city\":\"DOS\"}}]}}"
+     asserts "it allows modification of object root node for child collection" do
+       template = rabl %{
+         object @user => :user
+         attribute :name
+         child({@users => :users}, :object_root => 'person') { attribute :city }
+       }
+       scp = Object.new
+       scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
+       scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
+       scp.instance_variable_set :@rabl_hash, true
+       template.render(scp)
+     end.equals "{\"user\":{\"name\":\"leo\",\"users\":[{\"person\":{\"city\":\"UNO\"}},{\"person\":{\"city\":\"DOS\"}}]}}"
 
-  #    asserts "it allows modification of both labels for a child collection" do
-  #      template = rabl %{
-  #        object @user => :user
-  #        attribute :name
-  #        child({@users => :users}, :root => "people", :object_root => 'item') { attribute :city }
-  #      }
-  #      scp = Object.new
-  #      scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
-  #      scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
-  #      scp.instance_variable_set :@rabl_hash, true
-  #      template.render(scp)
-  #    end.equals "{\"user\":{\"name\":\"leo\",\"people\":[{\"item\":{\"city\":\"UNO\"}},{\"item\":{\"city\":\"DOS\"}}]}}"
-  #  end
+     asserts "it allows modification of both labels for a child collection" do
+       template = rabl %{
+         object @user => :user
+         attribute :name
+         child({@users => :users}, :root => "people", :object_root => 'item') { attribute :city }
+       }
+       scp = Object.new
+       scp.instance_variable_set :@user, User.new(:name => 'leo', :city => 'LA').attributes
+       scp.instance_variable_set :@users, [User.new(:name => 'one', :city => 'UNO').attributes, User.new(:name => 'two', :city => 'DOS').attributes]
+       scp.instance_variable_set :@rabl_hash, true
+       template.render(scp)
+     end.equals "{\"user\":{\"name\":\"leo\",\"people\":[{\"item\":{\"city\":\"UNO\"}},{\"item\":{\"city\":\"DOS\"}}]}}"
+   end
 
     context "#camelized_child" do
       asserts "that it can create a child node" do

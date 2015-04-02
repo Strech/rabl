@@ -18,16 +18,22 @@ module Rabl
         data.values[0].is_a?(Symbol)
     end
 
+    def rendered_in_rabl?(data)
+      return false unless data.keys[0].is_a?(Hash)
+      data.keys[0].keys.size == 1 && data.keys[0].keys[0].to_s == data.values[0].to_s
+    end
+
     # data_object(data) => <AR Object>
     # data_object(@user => :person) => @user
     # data_object(:user => :person) => @_object.send(:user)
     def data_object(data)
       if rabl_hash? && complex_data?(data)
-        #if complex_data?(data.keys[0])
-        #  return data.keys[0][data.values[0]]
-        #else
+        # {{"deal" => {"title" => ""}} => "deal"}
+        if rendered_in_rabl?(data)
+          return data.keys[0][data.values[0].to_s]
+        else
           return data.keys[0]
-        #end
+        end
       end
 
       data = if (data.is_a?(Hash) && data.keys.size == 1)
