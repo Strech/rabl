@@ -19,16 +19,31 @@ unless defined?(User)
       self.hobbies = self.hobbies.map { |h| Hobby.new(h) }
       self.best_hobby = BestHobby.new(self.best_hobby)
     end
+
+    def attributes
+      {
+        'age' => age,
+        'city' => city,
+        'name' => name,
+        'first' => first,
+        'hobbies' => hobbies.map(&:attributes),
+        'best_hobby' => best_hobby.attributes,
+        'some_attr' => some_attr,
+        'another_attr' => another_attr
+      }
+    end
   end
 
   class Hobby
     attr_accessor :name
     def initialize(name); @name = name; end
+    def attributes; {'name' => name}; end
   end
 
   class ModelName
     attr_accessor :element
     def initialize(element); @element = element; end
+    def attributes; {'element' => element}; end
   end
 
   # test for camelizing
@@ -47,3 +62,4 @@ unless defined?(NestedScope::User)
     end
   end
 end
+

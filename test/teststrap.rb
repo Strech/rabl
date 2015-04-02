@@ -1,5 +1,6 @@
 $LOAD_PATH.unshift(File.expand_path("../../lib", __FILE__))
 
+require 'pry-byebug'
 module Kernel
   def silence_warnings
     with_warnings(nil) { yield }
@@ -34,3 +35,4 @@ class Riot::Context
     str.force_encoding("iso-8859-1").split("").sort
   end
 end
+

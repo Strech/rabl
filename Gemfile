@@ -12,7 +12,7 @@ platforms :mri_18 do
 end
 
 group :test do
-  # RABL TEST  
+  # RABL TEST
   gem 'builder'
 
   # FIXTURES
@@ -24,4 +24,8 @@ end
 
 group :development, :test do
   # gem 'debugger'
+  gem 'pry-byebug'
+  gem 'pry-stack_explorer'
+  gem 'sourcify'
 end
+

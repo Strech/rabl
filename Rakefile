@@ -52,3 +52,4 @@ task "test:full" => [:test, "test:fixtures"]
 
 desc "Run tests for rabl"
 task :default => :test
+

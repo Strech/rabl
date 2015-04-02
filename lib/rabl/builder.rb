@@ -143,7 +143,9 @@ module Rabl
     # attribute :foo, :as => "bar", :if => lambda { |m| m.foo }
     def attribute(name, options={})
       if @_object && attribute_present?(name) && resolve_condition(options)
-        result_name = (options[:as] || name).to_sym
+        result_name = (options[:as] || name)
+        result_name = rabl_hash? ? result_name.to_s : result_name.to_sym
+
         if (!options[:optional] || attribute_selected?(result_name)) && !@_result.has_key?(result_name)
           attribute = data_object_attribute(name)
           @_result[result_name] = attribute
@@ -159,8 +161,9 @@ module Rabl
       return unless resolve_condition(options)
       return false unless (!options[:optional] || attribute_selected?(name))
       result = block.call(@_object)
+
       if name.present?
-        @_result[name.to_sym] = result
+        @_result[rabl_hash? ? name.to_s : name.to_sym] = result
       elsif result.respond_to?(:each_pair) # merge hash into root hash
         @_result.merge!(result)
       end
@@ -171,23 +174,30 @@ module Rabl
     # child(@user) { attribute :full_name }
     # child(@user => :person) { ... }
     # child(@users => :people) { ... }
+    #
+    # child(:best_hobby => :bestHobby)
     def child(data, options={}, &block)
       return false unless data.present? && resolve_condition(options)
       name   = is_name_value?(options[:root]) ? options[:root] : data_name(data)
       return false unless (!options[:optional] || attribute_selected?(name))
-      result_name = name.to_sym
+      result_name = rabl_hash? ? name.to_s : name.to_sym
       return false if @_result.has_key?(result_name)
 
       object = data_object(data)
       include_root = is_collection?(object) && options.fetch(:object_root, @options[:child_root]) # child @users
       engine_options = @options.slice(:child_root).merge(:root => include_root)
       engine_options.merge!(:object_root_name => options[:object_root]) if is_name_value?(options[:object_root])
-      object = { object => name } if data.respond_to?(:each_pair) && object # child :users => :people
+
+      # TODO : Maybe to_s is excess
+      if rabl_hash?
+        object = { object => name } if (complex_data?(data) || alias_link?(data)) && object # child :users => :people
+      else
+        object = { object => name } if data.respond_to?(:each_pair) && object # child :users => :people
+      end
 
       filters = inherited_filters(result_name)
       engine_options.merge!(:filters => filters) if filters
-      engine_options.merge!(:rabl_hash => @options[:rabl_hash])
-
+      engine_options.merge!(:rabl_hash => !!@options[:rabl_hash])
       engine_options.merge!(:parent_object => @_object)
 
       @_result[result_name] = self.object_to_hash(object, engine_options, &block)
@@ -259,7 +269,7 @@ module Rabl
     # Checks if an attribute is present. If not, check if the configuration specifies that this is an error
     # attribute_present?(created_at) => true
     def attribute_present?(name)
-      if rabl_hash? ? (@_object.respond_to?(:key?) ? @_object.key?(name) : (@_object[0] == name)) : (@_object.respond_to?(name))
+      if rabl_hash? ? (@_object.respond_to?(:key?) ? @_object.key?(name.to_s) : (@_object[0] == name.to_s)) : (@_object.respond_to?(name))
         return true
       elsif Rabl.configuration.raise_on_missing_attribute
         msg = "Failed to render missing attribute #{name}"

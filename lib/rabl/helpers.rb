@@ -9,36 +9,44 @@ module Rabl
       !!(@rabl_hash || (@options && @options[:scope].instance_variable_get(:@rabl_hash)))
     end
 
+    def complex_data?(data)
+      data.is_a?(Hash) && data.keys.size == 1 && !data.keys[0].is_a?(Symbol)
+    end
+
+    def alias_link?(data)
+      data.is_a?(Hash) && data.keys.size == 1 && data.keys[0].is_a?(Symbol) &&
+        data.values[0].is_a?(Symbol)
+    end
+
     # data_object(data) => <AR Object>
     # data_object(@user => :person) => @user
     # data_object(:user => :person) => @_object.send(:user)
     def data_object(data)
-      #binding.pry
-      #puts "obj=#{@_object.inspect}, data=#{data.inspect}\n"
-      if rabl_hash? && data.is_a?(Hash) && data.keys.size == 1 && !data.keys[0].is_a?(Symbol)
-        if data.keys[0].is_a?(Hash)
-          return data.keys[0][data.values[0]]
-        else
+      if rabl_hash? && complex_data?(data)
+        #if complex_data?(data.keys[0])
+        #  return data.keys[0][data.values[0]]
+        #else
           return data.keys[0]
-        end
+        #end
       end
 
-      data = (data.is_a?(Hash) && data.keys.size == 1) ? data.keys.first : data
-
-      if data.is_a?(Symbol) && defined?(@_object) && @_object
-        rabl_hash? ? @_object[data] : @_object.__send__(data)
+      data = if (data.is_a?(Hash) && data.keys.size == 1)
+        (rabl_hash? && alias_link?(data)) ? data.values.first : data.keys.first
       else
         data
       end
-    #rescue
-    #  binding.pry
-    #  1
+
+      if data.is_a?(Symbol) && defined?(@_object) && @_object
+        rabl_hash? ? @_object[data.to_s] : @_object.__send__(data)
+      else
+        data
+      end
     end
 
     # data_object_attribute(data) => @_object.send(data)
     def data_object_attribute(data)
       output = if rabl_hash?
-        @_object.respond_to?(:key?) ? @_object[data] : @_object[1]
+        @_object.respond_to?(:key?) ? @_object[data.to_s] : @_object[1]
       else
         @_object.__send__(data)
       end
