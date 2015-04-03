@@ -145,8 +145,7 @@ module Rabl
       name = (options[:as] || name) if rabl_hash?
 
       if @_object && attribute_present?(name) && resolve_condition(options)
-        result_name = (options[:as] || name)
-        result_name = rabl_hash? ? result_name.to_s : result_name.to_sym
+        result_name = (options[:as] || name).to_sym
 
         if (!options[:optional] || attribute_selected?(result_name)) && !@_result.has_key?(result_name)
           attribute = data_object_attribute(name)
@@ -182,11 +181,11 @@ module Rabl
       return false unless data.present? && resolve_condition(options)
       name   = is_name_value?(options[:root]) ? options[:root] : data_name(data)
       return false unless (!options[:optional] || attribute_selected?(name))
-      result_name = rabl_hash? ? name.to_s : name.to_sym
+      result_name = name.to_sym
       return false if @_result.has_key?(result_name)
 
       object = if rabl_hash?
-        alias_link?(data) ? data_object(result_name.to_sym) : data_object(data)
+        alias_link?(data) ? data_object(result_name) : data_object(data)
       else
         data_object(data)
       end
@@ -195,7 +194,6 @@ module Rabl
       engine_options = @options.slice(:child_root).merge(:root => include_root)
       engine_options.merge!(:object_root_name => options[:object_root]) if is_name_value?(options[:object_root])
 
-      # TODO : Maybe to_s is excess
       if rabl_hash?
         object = { object => name } if (complex_data?(data) || alias_link?(data)) && object # child :users => :people
       else
