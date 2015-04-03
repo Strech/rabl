@@ -25,9 +25,9 @@ context "Rabl::Engine" do
       Rabl::Engine.new("...source...", { :format => 'xml', :root => true, :view_path => '/path/to/views' })
     end
 
-    # asserts_topic.assigns :_source
-    # asserts_topic.assigns :_options
-    # asserts_topic.assigns :_view_path
+    asserts_topic.assigns :_source
+    asserts_topic.assigns :_options
+    asserts_topic.assigns :_view_path
   end
 
   context "with defaults" do
@@ -162,7 +162,11 @@ context "Rabl::Engine" do
           object @user => :user
           camelized_attributes :some_attr, :another_attr
         }
-        scp = scope('user', User.new.attributes)
+        scp = scope('user', User.new.attributes.tap do |user|
+          user['someAttr'] = user.delete('some_attr')
+          user['anotherAttr'] = user.delete('another_attr')
+        end)
+
         JSON.parse(template.render(scp))
       end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
 
@@ -172,7 +176,10 @@ context "Rabl::Engine" do
           camelized_attribute :some_attr
           camelized_attribute :another_attr
         }
-        scp = scope('user', User.new.attributes)
+        scp = scope('user', User.new.attributes.tap do |user|
+          user['someAttr'] = user.delete('some_attr')
+          user['anotherAttr'] = user.delete('another_attr')
+        end)
         JSON.parse(template.render(scp))
       end.equals JSON.parse("{\"user\":{\"someAttr\":\"value\",\"anotherAttr\":\"another value\"}}")
     end

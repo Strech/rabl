@@ -33,7 +33,7 @@ context "Rabl::Builder with @rabl_hash" do
     context "when given an object alias" do
      setup { builder({ :attributes => { :name => { :as => :foo } } }) }
       asserts "that the object is set properly" do
-        topic.build(@user, :root_name => "person")
+        topic.build(@user.tap { |u| u['foo'] = u.delete('name') }, :root_name => "person")
       end.equivalent_to({ "person" => { "foo" => "rabl" } })
     end
 
@@ -104,7 +104,7 @@ context "Rabl::Builder with @rabl_hash" do
         setup { stub(Rabl.configuration).raise_on_missing_attribute { false } }
 
         asserts "the node" do
-          build_hash @user, :attributes => { :fake => :fake }
+          build_hash @user, :attributes => { :fake => {as: :fake} }
         end.equals({})
       end
 
@@ -112,7 +112,7 @@ context "Rabl::Builder with @rabl_hash" do
         setup { stub(Rabl.configuration).raise_on_missing_attribute { true } }
 
         asserts "the node" do
-          build_hash @user, :attributes => { :fake => :fake }
+          build_hash @user, :attributes => { :fake => {as: :fake} }
         end.raises_kind_of(RuntimeError)
       end
     end
@@ -336,7 +336,7 @@ context "Rabl::Builder with @rabl_hash" do
 
     asserts "that it appends the glue attributes to result" do
       b = builder :glue => [{ :data => @user, :options => {}, :block => lambda { |u| attribute :name => :user_name }}]
-      b.build(@user)
+      b.build(@user.tap { |u| u['user_name'] = u.delete('name') })
     end.equivalent_to({ "user_name" => 'rabl' })
 
     asserts "that it does not generate new attributes if no glue attributes are present" do
