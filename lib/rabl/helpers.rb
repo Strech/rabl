@@ -6,7 +6,10 @@ module Rabl
     KNOWN_OBJECT_CLASSES = ['Struct']
 
     def rabl_hash?
-      !!(@rabl_hash || (@options && @options[:scope].instance_variable_get(:@rabl_hash)))
+      return true if !!@rabl_hash
+      return false unless @options
+
+      @options[:scope].instance_variable_get(:@rabl_hash) || @options[:rabl_hash]
     end
 
     def complex_data?(data)

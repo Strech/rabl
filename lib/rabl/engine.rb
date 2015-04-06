@@ -23,6 +23,9 @@ module Rabl
       @_locals, @_scope = locals, scope # must be before self#request_format
       reset_options!(scope)
       set_instance_variables!(scope, locals, &block)
+
+      rabl_hash if !!@rabl_hash # force set option if locals has it
+
       instance_exec(root_object, &block) if block_given?
       cache_results { self.send("to_" + @_options[:format].to_s, @_options) }
     end

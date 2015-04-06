@@ -190,7 +190,7 @@ context "Rabl::Engine" do
           code(:foo) { 'bar' }
         }
         template.render(scope 'other', nil)
-      end.equals "{\"foo\":\"bar\"}"
+      end.equals "{}"
 
       asserts "that it can be passed conditionals" do
         template = rabl %{
@@ -217,8 +217,8 @@ context "Rabl::Engine" do
           object @user => :user
           attribute :name
           child(@user => :user) do
-            code do |user|
-              {:city => user['city']}
+            code(:city) do
+              {'this' => 'is madness!'}
             end
           end
         }

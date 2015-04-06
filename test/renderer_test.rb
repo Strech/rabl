@@ -40,6 +40,18 @@ context "Rabl::Renderer" do
       JSON.parse(renderer.render)
     end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
 
+    asserts 'renders using rabl_hash as local option' do
+      source = %q{
+        object @user
+        attribute :name, :as => 'city'
+      }
+
+      user = {User.new(:name => 'irvine').attributes => 'user'}
+
+      renderer = Rabl::Renderer.new(source, user, { :locals => { :rabl_hash => true }, :format => 'json', :root => true, :view_path => '/path/to/views' })
+      JSON.parse(renderer.render)
+    end.equals JSON.parse("{\"user\":{\"city\":\"irvine\"}}")
+
     asserts 'allows redirecting scope to another object' do
       source = %q{
         object @user
@@ -388,3 +400,4 @@ context "Rabl::Renderer" do
     end.equals "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>user</key>\n\t<dict>\n\t\t<key>age</key>\n\t\t<integer>24</integer>\n\t\t<key>float</key>\n\t\t<real>1234.56</real>\n\t\t<key>name</key>\n\t\t<string>ivan</string>\n\t</dict>\n</dict>\n</plist>\n"
   end
 end
+
