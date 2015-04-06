@@ -159,12 +159,13 @@ module Rabl
     # node(:foo) { "bar" }
     # node(:foo, :if => lambda { |m| m.foo.present? }) { "bar" }
     def node(name, options={}, &block)
+      return attribute(name, options) if rabl_hash?
       return unless resolve_condition(options)
       return false unless (!options[:optional] || attribute_selected?(name))
       result = block.call(@_object)
 
       if name.present?
-        @_result[rabl_hash? ? name.to_s : name.to_sym] = result
+        @_result[name.to_sym] = result
       elsif result.respond_to?(:each_pair) # merge hash into root hash
         @_result.merge!(result)
       end

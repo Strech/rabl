@@ -191,27 +191,36 @@ context "Rabl::Builder with @rabl_hash" do
   end
 
   context "#node" do
-    asserts "that it has node :foo" do
-      build_hash @user, :node => [{ :name => :foo, :options => {}, :block => lambda { |u| "bar" } }]
-    end.equivalent_to({"foo" => 'bar'})
-
-    asserts "that using object it has node :boo" do
+    asserts "that using object it has node :city" do
       build_hash @user, :node => [
-        { :name => :foo, :options => {}, :block => lambda { |u| "bar" } },
-        { :name => :baz, :options => {}, :block => lambda { |u| u['city'] } }
+        { :name => :city, :options => {}, :block => lambda { |u| 'UNKNOWN' } }
       ]
-    end.equivalent_to({"foo" => 'bar', "baz" => 'irvine'})
-
-    asserts "that it converts the node name to a symbol" do
-      build_hash @user, :node => [{ :name => "foo", :options => {}, :block => lambda { |u| "bar" } }]
-    end.equivalent_to({"foo" => 'bar'})
+    end.equivalent_to({:city => 'irvine'})
 
     asserts "that the same node names as a string and symbol aren't duplicated" do
       build_hash @user, :node => [
-        { :name => "foo", :options => {}, :block => lambda { |u| "bar" } },
-        { :name => :foo, :options => {}, :block => lambda { |u| "bar" } }
+        { :name => "city", :options => {}, :block => lambda { |u| "Unknown" } },
+        { :name => :city, :options => {}, :block => lambda { |u| "UNKNOWN" } }
       ]
-    end.equivalent_to({"foo" => 'bar'})
+    end.equivalent_to({:city => 'irvine'})
+
+    context "that with a non-existent attribute" do
+      context "when non-existent attributes are allowed by the configuration" do
+        setup { stub(Rabl.configuration).raise_on_missing_attribute { false } }
+
+        asserts "the node" do
+          build_hash @user, :node => [{ :name => :foo, :options => {}, :block => lambda { |u| "bar" } }]
+        end.equals({})
+      end
+
+      context "when non-existent attributes are forbidden by the configuration" do
+        setup { stub(Rabl.configuration).raise_on_missing_attribute { true } }
+
+        asserts "the node" do
+          build_hash @user, :node => [{ :name => :foo, :options => {}, :block => lambda { |u| "bar" } }]
+        end.raises_kind_of(RuntimeError)
+      end
+    end
   end
 
   context "#child" do
